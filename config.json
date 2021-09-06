@@ -1,0 +1,15 @@
+{
+    "ServerIP": "192.168.0.188",
+    "ServerPort": "9000",
+	"ForegroundColor": "white",
+	"AccentColor": "red",
+	"SelectionColor": "yellow",
+	"PlaybarColor": "green",
+    "PlaybarInterval": 10,
+    "PlaylistSongTitleColor": "yellow",
+    "PlaylistSongAlbumColor": "red",
+    "PlaylistSongTracknumColor": "magenta",
+    "PlaylistSongArtistColor": "blue",
+    "PlaylistSongYearColor": "cyan",
+    "VolumeFillColor": "red"
+}
