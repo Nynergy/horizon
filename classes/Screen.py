@@ -27,3 +27,31 @@ class Screen:
 
     def getCurrentPanel(self):
         return self.panels[self.currentPanelIndex]
+
+    def setCurrentPanel(self, newIndex):
+        self.getCurrentPanel().unfocus()
+        newIndex = self.wrapIndex(newIndex)
+        self.currentPanelIndex = newIndex
+        self.getCurrentPanel().focus()
+
+    def incrementCurrentPanel(self):
+        if self.currentPanelIndex >= len(self.panels) - 1:
+            return
+
+        newIndex = self.currentPanelIndex + 1
+        self.setCurrentPanel(newIndex)
+
+    def decrementCurrentPanel(self):
+        if self.currentPanelIndex <= 0:
+            return
+
+        newIndex = self.currentPanelIndex - 1
+        self.setCurrentPanel(newIndex)
+
+    def wrapIndex(self, index):
+        if(index > len(self.panels) - 1):
+            return 0
+        if(index < 0):
+            return len(self.panels) - 1
+
+        return index

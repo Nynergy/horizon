@@ -3,7 +3,7 @@ This module aims to fill some holes in the lmsquery library, including adding
 my own query wrappers for common functions and server commands.
 """
 
-from classes.Music import Song
+from classes.Music import Album, Artist, Song
 
 """
 Songinfo queries return a list of dictionaries, so we use this function to
@@ -62,3 +62,37 @@ def get_player_info(lms, player):
     status = lms.query(player_id, 'status', 0, 9999)
 
     return status
+
+def get_media_library(lms):
+    # Get all songs, then organize them into albums
+    songs = lms.query("", "songs", 0, 9999, "tags:ACelSty")['titles_loop']
+    albums = {}
+
+    for song in songs:
+        if song['compilation'] == '1':
+            artist = "Various Artists"
+        else:
+            artist = song['albumartist'] if 'albumartist' in song else song['artist']
+        artist_id = song['albumartist_ids'] if 'albumartist_ids' in song else song['artist_ids']
+        if song['album_id'] not in albums:
+            # Create album if it doesn't already exist
+            album = Album(song['album_id'], artist, artist_id, song['album'], song['year'], [])
+            albums[album.album_id] = album
+        # Put song obj into album tracklist
+        song_obj = Song(song['id'], song['title'], artist, artist_id,
+                        song['album'], song['album_id'], song['year'], song['tracknum'])
+        album = albums[song['album_id']]
+        album.addSong(song_obj)
+
+    artists = {}
+    for album in albums.values():
+        if album.artist_id not in artists:
+            # Create artist if it doesn't already exist
+            artist = Artist(album.artist_id, album.artist, [])
+            artists[artist.artist_id] = artist
+        artist = artists[album.artist_id]
+        artist.addAlbum(album)
+
+    sorted_artists = dict(sorted(artists.items(), key = lambda item: item[1].name.upper()))
+
+    return sorted_artists

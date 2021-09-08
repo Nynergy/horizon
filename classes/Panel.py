@@ -3,6 +3,7 @@ This is where we keep all our Panel classes/subclasses.
 """
 
 import curses
+import unicodedata
 
 import draw
 from util import Point, get_color_pair
@@ -145,10 +146,9 @@ class Infobox(Panel):
         self.win.attron(curses.A_BOLD)
         counter = 0
         for line in self.lines:
-            line_point = Point(
-                               counter + (BORDER_PADDING + INNER_PADDING) // 2,
-                               (BORDER_PADDING + INNER_PADDING) // 2
-                              )
+            line_y = counter + (BORDER_PADDING + INNER_PADDING) // 2
+            line_x = (self.width // 2) - (len(line) // 2)
+            line_point = Point(line_y, line_x)
             draw.string(line_point, line, self.win)
             counter += 1
         self.win.attroff(curses.A_BOLD)
@@ -402,6 +402,7 @@ class ListPanel(Panel):
         self.f_item = 0
         self.l_item = min(len(self.items), self.height - 1)
         self.curr_item = 0
+        self.focused = False
 
     def render(self):
         self.clearScreen()
@@ -426,9 +427,11 @@ class ListPanel(Panel):
             # Specify applicable attributes
             if(counter + self.f_item == self.curr_item):
                 attr = (attr | curses.A_REVERSE)
-            item = strings[i][:self.width - 1] # Truncate strings longer than panel width
-            fill_spaces = (self.width - len(item)) - 2
-            itemline = item + (" " * fill_spaces)
+                if self.focused:
+                    attr = (attr | get_color_pair("Accent"))
+            item = strings[i][:self.width - 2] # Truncate strings longer than panel width
+            fill_spaces = (self.width - calc_string_width(item)) - 2
+            itemline = str(item) + (" " * fill_spaces)
             item_point = Point(counter + 1, 1)
             self.win.attron(attr)
             draw.string(item_point, itemline, self.win)
@@ -443,6 +446,31 @@ class ListPanel(Panel):
         if(self.l_item < len(self.items)):
             self.drawLowerIndicators()
 
+    def drawUpperIndicators(self):
+        left = Point(1, 0)
+        right = Point(1, self.width - 1)
+
+        self.win.attron(curses.A_ALTCHARSET)
+        draw.char(left, curses.ACS_UARROW, self.win)
+        draw.char(right, curses.ACS_UARROW, self.win)
+        self.win.attroff(curses.A_ALTCHARSET)
+
+    def drawLowerIndicators(self):
+        left = Point(self.height - 3, 0)
+        right = Point(self.height - 3, self.width - 1)
+
+        self.win.attron(curses.A_ALTCHARSET)
+        draw.char(left, curses.ACS_DARROW, self.win)
+        draw.char(right, curses.ACS_DARROW, self.win)
+        self.win.attroff(curses.A_ALTCHARSET)
+
+    def getCurrentItem(self):
+        return self.items[self.curr_item]
+
+    def setItems(self, new_items):
+        self.items = new_items
+        self.resetMovingFrame()
+
     def addItem(self, item):
         self.items.append(item)
         self.resetMovingFrame()
@@ -456,10 +484,20 @@ class ListPanel(Panel):
         self.resetMovingFrame()
 
     def resetMovingFrame(self):
-        self.curr_item = min(self.curr_item, self.height - 1)
+        self.curr_item = min(self.curr_item, self.height - 3, max(0, len(self.items) - 1))
         if len(self.items) < self.height - 1:
             self.f_item = 0
-        self.l_item = min(len(self.items), self.height - 1)
+        self.l_item = min(len(self.items), self.height - 3)
+
+    def focus(self):
+        self.focused = True
+
+    def unfocus(self):
+        self.focused = False
+
+def calc_string_width(text):
+    fake_length = len(text.replace(u'’', u"'").encode('utf-8'))
+    return fake_length - sum(unicodedata.east_asian_width(c) in 'WF' for c in text)
 
 """
 The PlaylistPanel is the main panel of the Playlist screen, and shows
@@ -564,9 +602,9 @@ class PlaylistPanel(ListPanel):
         # Get our column values from the song object, truncating when necessary
         title = item.title[:self.columnWidths['title']]
         album = item.album_title[:self.columnWidths['album']]
-        track = item.tracknum[:self.columnWidths['track']]
+        track = str(item.tracknum)[:self.columnWidths['track']]
         artist = item.artist[:self.columnWidths['artist']]
-        year = item.year[:self.columnWidths['year']]
+        year = str(item.year)[:self.columnWidths['year']]
 
         # Fill spaces for each value, based on the width of the column
         # Keep track of the string so far, to compare length
@@ -641,7 +679,8 @@ class PlaylistPanel(ListPanel):
         self.resetMovingFrame()
 
     def resetMovingFrame(self):
-        self.curr_item = min(self.curr_item, self.height - (PLAYLIST_HEADERS_HEIGHT + 3))
+        self.curr_item = min(self.curr_item, self.height - (PLAYLIST_HEADERS_HEIGHT + 3),
+                             max(0, len(self.items) - 1))
         if len(self.items) < self.height - (PLAYLIST_HEADERS_HEIGHT + 3):
             self.f_item = 0
         self.l_item = min(len(self.items), self.height - (PLAYLIST_HEADERS_HEIGHT + 3))

@@ -36,7 +36,7 @@ class Engine:
 
     def getPlayers(self):
         players = self.server.get_players()
-        # FIXME: For now, just default to the first player we find
+        # Upon startup, default to the first player we can find
         player_choice = players[0]
         player = LMSPlayer(player_choice['name'], player_choice['playerid'])
 
@@ -46,8 +46,15 @@ class Engine:
         screen_dimensions = self.getWindowDimensions()
         self.screens = [
                          screenmaker.make_screen("Playlist", screen_dimensions),
+                         screenmaker.make_screen("Media Library", screen_dimensions),
                          screenmaker.make_screen("Test", screen_dimensions)
                        ]
+
+        # We want to load the media library when the program starts
+        self.reloadMediaLibrary()
+        self.win.clear()
+        self.win.refresh()
+
         # NOTE: As long as we start on Playlist, load it here
         self.currentScreenIndex = 0
         self.reloadPlaylist()
@@ -74,6 +81,26 @@ class Engine:
         current_playlist = lmswrapper.get_current_playlist(self.server, self.player)
         for song in current_playlist:
             playlist_panel.addItem(song)
+
+    def reloadMediaLibrary(self):
+        # Tell the user we are doing work
+        infobox = Infobox("Fetching Media Library...\n\nThis may take a minute", self.win)
+        infobox.render()
+
+        # Clear the old media library
+        media_library_screen = self.screens[1]
+        media_library_panels = media_library_screen.panels
+        for panel in media_library_panels:
+            panel.clearItems()
+        
+        # Fetch the new media library from LMS
+        media_library = lmswrapper.get_media_library(self.server)
+        for artist in media_library.values():
+            media_library_panels[0].addItem(artist)
+
+        media_library_screen.setCurrentPanel(0)
+
+        paneldriver.change_media_panels(self.screens[1])
 
     def getCurrentScreen(self):
         return self.screens[self.currentScreenIndex]
@@ -143,6 +170,39 @@ class Engine:
             if(key == ord('r')):
                 # If we hit 'r' on the Playlist screen, reload the playlist
                 self.reloadPlaylist()
+            elif(key == ord('j')):
+                # Move current panel's highlight down 1
+                panel = self.screens[0].getCurrentPanel()
+                paneldriver.move_down(panel, 1)
+            elif(key == ord('k')):
+                # Move current panel's highlight up 1
+                panel = self.screens[0].getCurrentPanel()
+                paneldriver.move_up(panel, 1)
+            else:
+                pass # Do nothing
+
+        """ MEDIA LIBRARY COMMANDS """
+        # These commands should only work while on the Media Library screen
+        if self.currentScreenIndex == 1:
+            if(key == ord('r')):
+                # If we hit 'r' on the Media Library screen, reload the media library
+                self.reloadMediaLibrary()
+            elif(key == ord('j')):
+                # Move current panel's highlight down 1
+                panel = self.screens[1].getCurrentPanel()
+                paneldriver.move_down(panel, 1)
+                paneldriver.change_media_panels(self.screens[1])
+            elif(key == ord('k')):
+                # Move current panel's highlight up 1
+                panel = self.screens[1].getCurrentPanel()
+                paneldriver.move_up(panel, 1)
+                paneldriver.change_media_panels(self.screens[1])
+            elif(key == ord('h')):
+                # Move focused panel to the left
+                self.screens[1].decrementCurrentPanel()
+            elif(key == ord('l')):
+                # Move focused panel to the right
+                self.screens[1].incrementCurrentPanel()
             else:
                 pass # Do nothing
 
@@ -151,18 +211,10 @@ class Engine:
         if(key == ord('q')):
             self.quit = True
         elif(key in TAB_NUMBERS):
-            # If switching to the playlist screen, reload the playlist first
             if key == ord('1'):
+                # If switching to the playlist screen, reload the playlist first
                 self.reloadPlaylist()
             self.changeTab(key)
-        elif(key == ord('j')):
-            # Move current panel's highlight down 1
-            panel = self.getCurrentScreen().getCurrentPanel()
-            paneldriver.move_down(panel, 1)
-        elif(key == ord('k')):
-            # Move current panel's highlight up 1
-            panel = self.getCurrentScreen().getCurrentPanel()
-            paneldriver.move_up(panel, 1)
         elif(key == curses.KEY_RESIZE):
             # Begin a cascading call to resize all screens/panels/windows/etc
             # First, reset the Engine's internal sizes

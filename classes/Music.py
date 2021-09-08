@@ -8,20 +8,39 @@ class LMSPlayer:
         self.name = name
         self.player_id = player_id
 
+class Artist:
+    def __init__(self, artist_id, name, albums):
+        self.artist_id = artist_id
+        self.name = name
+        self.albums = albums
+
+    def addAlbum(self, album):
+        index = 0
+        for i in range(len(self.albums)):
+            a = self.albums[i]
+            if album.year < a.year:
+                break
+            index += 1
+        self.albums.insert(index, album)
+
+    def __repr__(self):
+        return self.name
+
 class Album:
-    def __init__(self, album_id, artist, title, year, songs):
+    def __init__(self, album_id, artist, artist_id, title, year, songs):
         self.album_id = album_id
         self.artist = artist
+        self.artist_id = artist_id
         self.title = title
         self.year = year
         self.songs = songs
 
+    def addSong(self, song):
+        index = min(len(self.songs), song.tracknum - 1)
+        self.songs.insert(index, song)
+
     def __repr__(self):
-        song_strings = []
-        for song in self.songs:
-            song_strings.append(repr(song))
-        tracklist = "\n> ".join(song_strings)
-        return f"{self.title} :: {self.artist} ({self.year})\n> {tracklist}"
+        return self.title
 
 class Song:
     def __init__(self, song_id, title, artist, artist_id, album_title, album_id, year, tracknum):
@@ -32,7 +51,7 @@ class Song:
         self.album_title = album_title
         self.album_id = album_id
         self.year = year
-        self.tracknum = tracknum
+        self.tracknum = int(tracknum)
 
     def __repr__(self):
-        return f"{self.title} - {self.artist} - {self.album_title} ({self.year})"
+        return self.title
