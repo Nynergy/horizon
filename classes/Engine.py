@@ -13,7 +13,7 @@ import screenmaker
 from util import Point
 
 from classes.Music import LMSPlayer
-from classes.Panel import Infobox, Playbar, Statusline
+from classes.Panel import Infobox, Playbar, Prompt, Statusline
 from classes.Screen import Screen
 
 TAB_NUMBERS = [
@@ -137,11 +137,14 @@ class Engine:
 
     def run(self):
         while(not self.quit):
-            self.renderStatusline()
-            self.renderCurrentScreen()
-            self.renderPlaybar()
+            self.renderAll()
             key = self.getInput()
             self.handleInput(key)
+
+    def renderAll(self):
+        self.renderStatusline()
+        self.renderCurrentScreen()
+        self.renderPlaybar()
 
     def renderStatusline(self):
         # Fetch status info for current player
@@ -203,6 +206,24 @@ class Engine:
             elif(key == ord('l')):
                 # Move focused panel to the right
                 self.screens[1].incrementCurrentPanel()
+            elif(key == 10): # Key 10 is ENTER
+                # Grab the selected item and pass it to the LMS to load into the playlist
+                panel = self.screens[1].getCurrentPanel()
+                selected_item = paneldriver.get_selected_item(panel)
+                
+                # Let the user know we are doing work
+                infobox = Infobox("Loading Media Selection...", self.win)
+                infobox.render()
+                lmswrapper.control_playlist(self.server, self.player, 'load', selected_item)
+            elif(key == ord(' ')):
+                # Grab the selected item and pass it to the LMS to append to the playlist
+                panel = self.screens[1].getCurrentPanel()
+                selected_item = paneldriver.get_selected_item(panel)
+                
+                # Let the user know we are doing work
+                infobox = Infobox("Adding Media Selection to Current Playlist...", self.win)
+                infobox.render()
+                lmswrapper.control_playlist(self.server, self.player, 'add', selected_item)
             else:
                 pass # Do nothing
 
@@ -215,19 +236,44 @@ class Engine:
                 # If switching to the playlist screen, reload the playlist first
                 self.reloadPlaylist()
             self.changeTab(key)
+        elif(key == ord('c')):
+            # Prompt the user if they actually want to clear the playlist
+            prompt = Prompt("Really clear the current playlist?", self.win)
+            confirmed = prompt.getConfirmation()
+            while confirmed == "RESIZE":
+                self.resizeAll()
+                prompt = Prompt("Really clear the current playlist?", self.win)
+                confirmed = prompt.getConfirmation()
+            if confirmed:
+                # Clear the playlist
+                self.renderAll()
+
+                # Let the user know we are doing work
+                infobox = Infobox("Clearing Current Playlist...", self.win)
+                infobox.render()
+                lmswrapper.clear_playlist(self.server, self.player)
+
+                # If currently on the Playlist screen, refresh it to show changes
+                if self.currentScreenIndex == 0:
+                    self.reloadPlaylist()
         elif(key == curses.KEY_RESIZE):
             # Begin a cascading call to resize all screens/panels/windows/etc
-            # First, reset the Engine's internal sizes
-            (self.height, self.width) = self.win.getmaxyx()
-            # Next, resize each Screen with the screenmaker
-            screen_dimensions = self.getWindowDimensions()
-            for screen in self.screens:
-                screenmaker.resize_screen(screen, screen_dimensions)
-            # Next, resize the Playbar and Statusline
-            self.resizePlaybar()
-            self.resizeStatusline()
+            self.resizeAll()
         else:
             pass # Do nothing
+
+    def resizeAll(self):
+        # First, reset the Engine's internal sizes
+        (self.height, self.width) = self.win.getmaxyx()
+        # Next, resize each Screen with the screenmaker
+        screen_dimensions = self.getWindowDimensions()
+        for screen in self.screens:
+            screenmaker.resize_screen(screen, screen_dimensions)
+        # Next, resize the Playbar and Statusline
+        self.resizePlaybar()
+        self.resizeStatusline()
+
+        self.renderAll()
 
     def changeTab(self, key):
         tab_index = int(chr(key)) - 1

@@ -37,3 +37,6 @@ def change_media_panels(media_library_screen):
         # Get album info and put songs into songs panel
         album = media_library_screen.panels[1].getCurrentItem()
         media_library_screen.panels[2].setItems(album.songs)
+
+def get_selected_item(panel):
+    return panel.getCurrentItem()

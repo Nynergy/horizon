@@ -96,3 +96,21 @@ def get_media_library(lms):
     sorted_artists = dict(sorted(artists.items(), key = lambda item: item[1].name.upper()))
 
     return sorted_artists
+
+def control_playlist(lms, player, command, selected_item):
+    player_id = player.player_id
+
+    # Determine which query to use based on the type of item selected
+    if isinstance(selected_item, Artist):
+        lms.query(player_id, "playlistcontrol", f"cmd:{command}", f"artist_id:{selected_item.artist_id}")
+    elif isinstance(selected_item, Album):
+        lms.query(player_id, "playlistcontrol", f"cmd:{command}", f"album_id:{selected_item.album_id}")
+    elif isinstance(selected_item, Song):
+        lms.query(player_id, "playlistcontrol", f"cmd:{command}", f"track_id:{selected_item.song_id}")
+    else:
+        raise ValueError(selected_item)
+
+def clear_playlist(lms, player):
+    player_id = player.player_id
+
+    lms.query(player_id, "playlist", "clear")

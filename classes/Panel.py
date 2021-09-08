@@ -154,6 +154,86 @@ class Infobox(Panel):
         self.win.attroff(curses.A_BOLD)
 
 """
+A Prompt is a special kind of Infobox that, when rendered, asks the user for a
+yes or no confirmation.
+"""
+
+class Prompt(Infobox):
+    def __init__(self, message, win, title=""):
+        self.prompt_string = "(y)es :: (n)o"
+        super().__init__(message, win, title)
+
+    def generateDimensions(self, message, win):
+        (max_y, max_x) = win.getmaxyx()
+
+        # Determine how many lines the message will be split across
+        strings = message.split('\n')
+        lines = []
+        for s in strings:
+            if(len(s) >= max_x - FULL_PADDING):
+                # TODO: wrapAtLength is currently unimplemented
+                wrapped_lines = self.wrapAtLength(s, max_x - FULL_PADDING)
+                for w in wrapped_lines:
+                    lines.append(w)
+            else:
+                lines.append(s)
+        # NOTE: We add 2 to account for the yes/no prompt
+        num_lines = len(lines) + 2
+        self.lines = lines
+
+        # Determine how wide the box needs to be
+        longest_string_length = 0
+        for l in lines:
+            if len(l) > longest_string_length:
+                longest_string_length = len(l)
+        # In case the message is shorter than the prompt
+        longest_string_length = max(longest_string_length, len(self.prompt_string))
+
+        # Determine the dimensions of the box and return them
+        y = ((max_y // 2) - (num_lines // 2))
+        x = ((max_x // 2) - (longest_string_length // 2))
+        width = longest_string_length + (OUTER_PADDING + BORDER_PADDING)
+        height = num_lines + (OUTER_PADDING + BORDER_PADDING)
+
+        ul = Point(y, x)
+        lr = Point(y + height, x + width)
+        dimensions = (ul, lr)
+
+        return dimensions
+
+    def drawMessage(self):
+        self.win.attron(curses.A_BOLD)
+        counter = 0
+        for line in self.lines:
+            line_y = counter + (BORDER_PADDING + INNER_PADDING) // 2
+            line_x = (self.width // 2) - (len(line) // 2)
+            line_point = Point(line_y, line_x)
+            draw.string(line_point, line, self.win)
+            counter += 1
+
+        # Draw prompt as well
+        counter += 1
+        line = self.prompt_string
+        line_y = counter + (BORDER_PADDING + INNER_PADDING) // 2
+        line_x = (self.width // 2) - (len(line) // 2)
+        line_point = Point(line_y, line_x)
+        draw.string(line_point, line, self.win)
+        self.win.attroff(curses.A_BOLD)
+
+    def getConfirmation(self):
+        self.render()
+        key = None
+        while(key not in [ord('y'), ord('Y'), ord('n'), ord('N')]):
+            key = self.win.getch()
+            if key == curses.KEY_RESIZE:
+                # Tell the Engine to resize everything and then re-render this prompt
+                return "RESIZE"
+            elif key in [ord('y'), ord('Y')]:
+                return True
+            elif key in [ord('n'), ord('N')]:
+                return False
+
+"""
 The Playbar is the constant panel of information about the currently playing
 track, including title, artist, album, duration, elapsed time, etc.
 
@@ -180,6 +260,13 @@ class Playbar(Panel):
             self.drawTrackInfo(track_info)
         self.win.refresh()
 
+    def clearScreen(self):
+        # Fill each cell with the empty character
+        for i in range(self.height):
+            for j in range(self.width - 1):
+                p = Point(i, j)
+                draw.char(p, " ", self.win)
+
     def drawProgressBar(self, total_time, elapsed_time):
         percentage = elapsed_time / max(1, total_time)
         full_width = self.width - 2
@@ -192,11 +279,11 @@ class Playbar(Panel):
         # Draw blocks
         for i in range(num_blocks):
             p = Point(0, i + 1)
-            draw.char(p, curses.ACS_BOARD, self.win)
+            draw.char(p, curses.ACS_CKBOARD, self.win)
 
         # Draw playhead
         p = Point(0, min(full_width + 1, num_blocks))
-        draw.char(p, curses.ACS_BOARD, self.win)
+        draw.char(p, curses.ACS_CKBOARD, self.win)
 
         # Draw spaces
         for i in range(num_spaces):
