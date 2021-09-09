@@ -8,6 +8,9 @@ class LMSPlayer:
         self.name = name
         self.player_id = player_id
 
+    def __repr__(self):
+        return self.name
+
 class Artist:
     def __init__(self, artist_id, name, albums):
         self.artist_id = artist_id

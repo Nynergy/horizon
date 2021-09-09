@@ -114,3 +114,34 @@ def clear_playlist(lms, player):
     player_id = player.player_id
 
     lms.query(player_id, "playlist", "clear")
+
+def toggle_play_mode(lms, player):
+    player_id = player.player_id
+
+    # Using 'pause' without specifying a value of 1 or 0 toggles state
+    lms.query(player_id, "pause")
+
+def change_volume(lms, player, amount):
+    player_id = player.player_id
+
+    lms.query(player_id, "mixer", "volume", amount)
+
+def play_song_at_playlist_index(lms, player, index):
+    player_id = player.player_id
+
+    lms.query(player_id, "playlist", "index", index)
+
+def stop_playing(lms, player):
+    player_id = player.player_id
+
+    lms.query(player_id, "stop")
+
+def toggle_playlist_mode(lms, player, mode):
+    player_id = player.player_id
+
+    lms.query(player_id, "playlist", mode)
+
+def toggle_power(lms, player):
+    player_id = player.player_id
+
+    lms.query(player_id, "power")

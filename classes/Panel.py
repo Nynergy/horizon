@@ -234,6 +234,74 @@ class Prompt(Infobox):
                 return False
 
 """
+A Listbox is a special type of Infobox that takes a list of items and presents
+them to the user. The user then usesa letter to choose from the list.
+"""
+
+class Listbox(Infobox):
+    def __init__(self, message, items, win, title=""):
+        self.items = items
+        super().__init__(message, win, title)
+
+    def generateDimensions(self, message, win):
+        (max_y, max_x) = win.getmaxyx()
+
+        # Determine how many lines the message will be split across
+        self.message_strings = message.split('\n')
+        item_strings = []
+        for item in self.items:
+            item_strings.append(repr(item))
+        self.lines = self.message_strings + [" "] + item_strings
+        num_lines = len(self.lines)
+
+        # Determine how wide the box needs to be
+        longest_string_length = 0
+        for l in self.lines:
+            if len(l) > longest_string_length:
+                longest_string_length = len(l)
+
+        # Determine the dimensions of the box and return them
+        y = 0
+        x = 0
+        width = longest_string_length + (OUTER_PADDING + BORDER_PADDING)
+        height = num_lines + (OUTER_PADDING + BORDER_PADDING)
+
+        ul = Point(y, x)
+        lr = Point(y + height, x + width)
+        dimensions = (ul, lr)
+
+        return dimensions
+
+    def drawMessage(self):
+        self.win.attron(curses.A_BOLD)
+        counter = 0
+        self.choices = []
+        choice = 'a'
+        for line in self.lines:
+            if counter > len(self.message_strings):
+                self.choices.append(choice)
+                line = f"({choice}) {line}"
+                choice = chr(ord(choice) + 1)
+            line_y = counter + (BORDER_PADDING + INNER_PADDING) // 2
+            line_x = (self.width // 2) - (len(line) // 2)
+            line_point = Point(line_y, line_x)
+            draw.string(line_point, line, self.win)
+            counter += 1
+        self.win.attroff(curses.A_BOLD)
+
+    def getChoice(self):
+        self.render()
+        key = self.win.getkey()
+        if key == curses.KEY_RESIZE:
+            # Tell the Engine to resize everything and then re-render this prompt
+            return "RESIZE"
+        elif key in self.choices:
+            choice = self.choices.index(key)
+            return self.items[choice]
+
+        return None
+
+"""
 The Playbar is the constant panel of information about the currently playing
 track, including title, artist, album, duration, elapsed time, etc.
 
@@ -320,6 +388,11 @@ class Playbar(Panel):
             info_string += "..."
         info_point = Point(self.height - 1, len(leader))
         draw.string(info_point, info_string, self.win)
+
+    def resize(self, new_dimensions):
+        self.constructPanelWindow(new_dimensions)
+        # Don't forget to re-enable the non-blocking call!
+        self.win.timeout(250)
 
 def convert_to_time(time):
     time = round(time)
@@ -550,6 +623,9 @@ class ListPanel(Panel):
         draw.char(left, curses.ACS_DARROW, self.win)
         draw.char(right, curses.ACS_DARROW, self.win)
         self.win.attroff(curses.A_ALTCHARSET)
+
+    def getCurrentItemIndex(self):
+        return self.curr_item
 
     def getCurrentItem(self):
         return self.items[self.curr_item]

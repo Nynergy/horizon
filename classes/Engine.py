@@ -13,7 +13,7 @@ import screenmaker
 from util import Point
 
 from classes.Music import LMSPlayer
-from classes.Panel import Infobox, Playbar, Prompt, Statusline
+from classes.Panel import Infobox, Listbox, Playbar, Prompt, Statusline
 from classes.Screen import Screen
 
 TAB_NUMBERS = [
@@ -170,35 +170,96 @@ class Engine:
         """ PLAYLIST COMMANDS """
         # These commands should only work while on the Playlist screen
         if self.currentScreenIndex == 0:
-            if(key == ord('r')):
-                # If we hit 'r' on the Playlist screen, reload the playlist
+            if(key == ord('f')):
+                # Reload the playlist
                 self.reloadPlaylist()
             elif(key == ord('j')):
                 # Move current panel's highlight down 1
                 panel = self.screens[0].getCurrentPanel()
                 paneldriver.move_down(panel, 1)
+            elif(key == ord('J')):
+                # Move current panel's highlight down half the panel height
+                panel = self.screens[0].getCurrentPanel()
+                paneldriver.move_down(panel, panel.height // 2)
+            elif(key == ord('G')):
+                # Move current panel's highlight down to the bottom
+                panel = self.screens[0].getCurrentPanel()
+                paneldriver.move_down(panel, len(panel.items))
             elif(key == ord('k')):
                 # Move current panel's highlight up 1
                 panel = self.screens[0].getCurrentPanel()
                 paneldriver.move_up(panel, 1)
+            elif(key == ord('K')):
+                # Move current panel's highlight up half the panel height
+                panel = self.screens[0].getCurrentPanel()
+                paneldriver.move_up(panel, panel.height // 2)
+            elif(key == ord('g')):
+                # Move current panel's highlight up to the top
+                panel = self.screens[0].getCurrentPanel()
+                paneldriver.move_up(panel, len(panel.items))
+            elif(key == ord(' ')):
+                # Toggle play/pause
+                lmswrapper.toggle_play_mode(self.server, self.player)
+            elif(key == ord('/')):
+                # Stop playing
+                lmswrapper.stop_playing(self.server, self.player)
+            elif(key == 10): # Key 10 is ENTER
+                # Grab the selected item's index and start playback from that index
+                panel = self.screens[0].getCurrentPanel()
+                index = panel.getCurrentItemIndex()
+                lmswrapper.play_song_at_playlist_index(self.server, self.player, index)
+            elif(key == ord('<')):
+                # Play the previous track in the playlist
+                lmswrapper.play_song_at_playlist_index(self.server, self.player, '-1')
+            elif(key == ord('>')):
+                # Play the next track in the playlist
+                lmswrapper.play_song_at_playlist_index(self.server, self.player, '+1')
+            elif(key == ord('r')):
+                # Toggle repeat mode
+                lmswrapper.toggle_playlist_mode(self.server, self.player, 'repeat')
+            elif(key == ord('z')):
+                # Toggle shuffle mode
+                lmswrapper.toggle_playlist_mode(self.server, self.player, 'shuffle')
+                # When we shuffle, playlist order may change, so reload it
+                self.reloadPlaylist()
             else:
                 pass # Do nothing
 
         """ MEDIA LIBRARY COMMANDS """
         # These commands should only work while on the Media Library screen
         if self.currentScreenIndex == 1:
-            if(key == ord('r')):
-                # If we hit 'r' on the Media Library screen, reload the media library
+            if(key == ord('f')):
+                # Reload the media library
                 self.reloadMediaLibrary()
             elif(key == ord('j')):
                 # Move current panel's highlight down 1
                 panel = self.screens[1].getCurrentPanel()
                 paneldriver.move_down(panel, 1)
                 paneldriver.change_media_panels(self.screens[1])
+            elif(key == ord('J')):
+                # Move current panel's highlight down half the panel size
+                panel = self.screens[1].getCurrentPanel()
+                paneldriver.move_down(panel, panel.height // 2)
+                paneldriver.change_media_panels(self.screens[1])
+            elif(key == ord('G')):
+                # Move current panel's highlight down to the bottom
+                panel = self.screens[1].getCurrentPanel()
+                paneldriver.move_down(panel, len(panel.items))
+                paneldriver.change_media_panels(self.screens[1])
             elif(key == ord('k')):
                 # Move current panel's highlight up 1
                 panel = self.screens[1].getCurrentPanel()
                 paneldriver.move_up(panel, 1)
+                paneldriver.change_media_panels(self.screens[1])
+            elif(key == ord('K')):
+                # Move current panel's highlight up half the panel size
+                panel = self.screens[1].getCurrentPanel()
+                paneldriver.move_up(panel, panel.height // 2)
+                paneldriver.change_media_panels(self.screens[1])
+            elif(key == ord('g')):
+                # Move current panel's highlight up to the top
+                panel = self.screens[1].getCurrentPanel()
+                paneldriver.move_up(panel, len(panel.items))
                 paneldriver.change_media_panels(self.screens[1])
             elif(key == ord('h')):
                 # Move focused panel to the left
@@ -254,6 +315,34 @@ class Engine:
                 lmswrapper.clear_playlist(self.server, self.player)
 
                 # If currently on the Playlist screen, refresh it to show changes
+                if self.currentScreenIndex == 0:
+                    self.reloadPlaylist()
+        elif(key == ord('-')):
+            # Volume down
+            lmswrapper.change_volume(self.server, self.player, '-5')
+        elif((key == ord('=')) or (key == ord('+'))): # Shift is optional
+            # Volume up
+            lmswrapper.change_volume(self.server, self.player, '+5')
+        elif(key == ord('o')):
+            # Toggle the player ON and OFF
+            lmswrapper.toggle_power(self.server, self.player)
+        elif(key == ord('p')):
+            # Present a list of players found, and choose one to connect to
+            players = []
+            player_list = self.server.get_players()
+            for player in player_list:
+                p = LMSPlayer(player['name'], player['playerid'])
+                players.append(p)
+            listbox = Listbox("Please Select a Player", players, self.win)
+            choice = listbox.getChoice()
+            while choice == "RESIZE":
+                self.resizeAll()
+                listbox = Listbox("Please Select a Player", players, self.win)
+                choice = listbox.getChoice()
+            if choice != None:
+                self.player = choice
+
+                # If the user is on the Playlist screen, reload it
                 if self.currentScreenIndex == 0:
                     self.reloadPlaylist()
         elif(key == curses.KEY_RESIZE):

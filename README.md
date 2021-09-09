@@ -6,6 +6,11 @@ A TUI controller for Logitech Media Server
 
 ------------------------------------------------------------------------------
 
+![Showcase of horizon Playlist screen](playlist.png)
+![Showcase of horizon Media Library screen](media_library.png)
+
+The above images showcase the Playlist and Media Library screens of horizon.
+
 ## What is horizon and why does it exist?
 
 _horizon_ is a Terminal User Interface (TUI) meant to control and display
@@ -27,16 +32,20 @@ end up discarding in favor of a browser-based option down the road.
 
 ## What exactly does it do?
 
-At the moment, not much. It doesn't have any command capabilities yet, so it
-won't affect your server/players. But it is able to query a player for status
-information, the current playlist, the current track playing, stuff like that.
-You can scroll around the playlist screen and resize everything and watch the
-progress bar go left to right as you listen to your music.
+At the moment, you have two screens: The Playlist, and the Media Library. On the
+Playlist screen, you can view what the connected player currently has in its
+playlist, play selected tracks, toggle play/pause, toggle repeat/shuffle modes,
+skip to the previous/next track, change volume, turn the player on and off, and
+even select a totally different player to connect to.
 
-In the future I plan to allow you access to your media library, similar to what
-ncmpcpp does, and give you commands to load songs/albums into the playlist and
-play them. I would also like to give the user command over things like volume,
-repeat/shuffle controls, saving and loading playlists, etc.
+In the Media Library, you can navigate between nested lists of artists, albums,
+and songs. You can load the selected media into the playlist (which clears out
+the playlist and loads the media, then begins playing it), or append the
+selected media to the end of the playlist.
+
+There are still some features I need to add, such as deleting certain items from
+the playlist, and interacting with your _saved_ playlists, which is going to be
+another whole screen attached to the program.
 
 ## How can I run it?
 
@@ -58,13 +67,64 @@ file provided in the repository for how to customize it.
 
 Here are the commands that exist right now:
 
-### Playlist Commands
+### General Commands
+
+These are commands that should work on any screen.
 
 Key | Action
 ----|-------
 <kbd>q</kbd> | quit horizon
+<kbd>1</kbd> | open the Playlist screen
+<kbd>2</kbd> | open the Media Library screen
+<kbd>c</kbd> | clear the current playlist
+<kbd>-</kbd> | volume down
+<kbd>=</kbd> or <kbd>+</kbd> | volume up
+<kbd>o</kbd> | toggle player on/off
+<kbd>p</kbd> | pick player to connect to
+
+### Playlist Commands
+
+These are commands that work on the Playlist screen.
+
+Key | Action
+----|-------
+<kbd>f</kbd> | fetch/reload the current playlist
 <kbd>j</kbd> and <kbd>k</kbd> | change track focus up and down
+<kbd>J</kbd> and <kbd>K</kbd> | change track focus up and down by half a page
+<kbd>g</kbd> and <kbd>G</kbd> | change track focus to top/bottom of list
+<kbd>Space</kbd> | toggle play/pause
+<kbd>/</kbd> | stop playing
+<kbd>Enter</kbd> | start playing from highlighted track
+<kbd><</kbd> and <kbd>></kbd> | skip to previous/next track in playlist
+<kbd>r</kbd> | toggle repeat mode
+<kbd>z</kbd> | toggle shuffle mode
+
+Note that the repeat and shuffle mode indicators are at the top right of the
+screen, and use the following values:
+- Repeat
+  - '-': No repeat
+  - 'r': Repeat playlist
+  - 'R': Repeat single track
+- Shuffle
+  - '-': No shuffle
+  - 'z': Shuffle tracks
+  - 'Z': Shuffle albums
+
+### Media Library Commands
+
+These are commands that work on the Media Library screen.
+
+Key | Action
+----|-------
+<kbd>f</kbd> | fetch/reload the media library
+<kbd>j</kbd> and <kbd>k</kbd> | change item focus up and down
+<kbd>J</kbd> and <kbd>K</kbd> | change item focus up and down by half a page
+<kbd>g</kbd> and <kbd>G</kbd> | change item focus to top/bottom of list
+<kbd>h</kbd> and <kbd>l</kbd> | change panel focus left and right
+<kbd>Space</kbd> | append highlighted media to current playlist
+<kbd>Enter</kbd> | empty playlist, load highlighted media, and play
 
 ## Now what?
 
-Wait until I implement more stuff, I don't know. Be patient. :)
+Use it as it exists now, wait for more updates, I don't know. It's open source
+code I spill out in my free time, do whatever the heck you want with it. :)
