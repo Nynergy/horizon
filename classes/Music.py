@@ -11,6 +11,18 @@ class LMSPlayer:
     def __repr__(self):
         return self.name
 
+class Playlist:
+    def __init__(self, playlist_id, name, songs):
+        self.playlist_id = playlist_id
+        self.name = name
+        self.songs = songs
+
+    def addSong(self, song):
+        self.songs.append(song)
+
+    def __repr__(self):
+        return self.name
+
 class Artist:
     def __init__(self, artist_id, name, albums):
         self.artist_id = artist_id

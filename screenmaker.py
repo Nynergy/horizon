@@ -36,6 +36,8 @@ def get_screen_maker(screen_name):
         return _make_playlist_screen
     elif screen_name == 'Media Library':
         return _make_media_library_screen
+    elif screen_name == 'Saved Playlists':
+        return _make_saved_playlists_screen
     elif screen_name == 'Test':
         return _make_test_screen
     else:
@@ -76,6 +78,26 @@ def get_vertical_third_dimensions(screen_dimensions, panel_num):
 
     return panel_dimensions
 
+def _make_saved_playlists_screen(screen_dimensions):
+    # Saved Playlists screen has a 1/4 width panel, and a 3/4 width panel
+    screen = Screen(screen_dimensions, "Saved Playlists")
+    (screen_ul, screen_lr) = screen_dimensions
+
+    one_quarter_ul = screen_ul
+    one_quarter_lr = Point(screen_lr.y, screen_lr.x // 4)
+    one_quarter_dimensions = (one_quarter_ul, one_quarter_lr)
+    one_quarter_panel = ListPanel(one_quarter_dimensions, "Playlists")
+
+    three_quarter_ul = Point(screen_ul.y, one_quarter_lr.x + 0)
+    three_quarter_lr = Point(screen_lr.y, screen_lr.x)
+    three_quarter_dimensions = (three_quarter_ul, three_quarter_lr)
+    three_quarter_panel = PlaylistPanel(three_quarter_dimensions, "Tracks")
+
+    screen.addPanel(one_quarter_panel)
+    screen.addPanel(three_quarter_panel)
+
+    return screen
+
 def _make_test_screen(screen_dimensions):
     # Test screen is just a single empty panel
     screen = Screen(screen_dimensions, "Test")
@@ -89,6 +111,8 @@ def get_screen_resizer(screen_name):
         return _resize_playlist_screen
     elif screen_name == 'Media Library':
         return _resize_media_library_screen
+    elif screen_name == 'Saved Playlists':
+        return _resize_saved_playlists_screen
     elif screen_name == 'Test':
         return _resize_test_screen
     else:
@@ -109,6 +133,22 @@ def _resize_media_library_screen(screen, screen_dimensions):
     screen.panels[0].resize(artist_panel_dimensions)
     screen.panels[1].resize(album_panel_dimensions)
     screen.panels[2].resize(song_panel_dimensions)
+
+def _resize_saved_playlists_screen(screen, screen_dimensions):
+    # Saved Playlists screen has a 1/4 width panel, and a 3/4 width panel
+    screen.setDimensions(screen_dimensions)
+    (screen_ul, screen_lr) = screen_dimensions
+
+    one_quarter_ul = screen_ul
+    one_quarter_lr = Point(screen_lr.y, screen_lr.x // 4)
+    one_quarter_dimensions = (one_quarter_ul, one_quarter_lr)
+
+    three_quarter_ul = Point(screen_ul.y, one_quarter_lr.x + 0)
+    three_quarter_lr = Point(screen_lr.y, screen_lr.x)
+    three_quarter_dimensions = (three_quarter_ul, three_quarter_lr)
+
+    screen.panels[0].resize(one_quarter_dimensions)
+    screen.panels[1].resize(three_quarter_dimensions)
 
 def _resize_test_screen(screen, screen_dimensions):
     screen.setDimensions(screen_dimensions)

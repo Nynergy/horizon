@@ -47,11 +47,17 @@ class Engine:
         self.screens = [
                          screenmaker.make_screen("Playlist", screen_dimensions),
                          screenmaker.make_screen("Media Library", screen_dimensions),
+                         screenmaker.make_screen("Saved Playlists", screen_dimensions),
                          screenmaker.make_screen("Test", screen_dimensions)
                        ]
 
         # We want to load the media library when the program starts
         self.reloadMediaLibrary()
+        self.win.clear()
+        self.win.refresh()
+
+        # We want to load the user's saved playlists as well
+        self.reloadSavedPlaylists()
         self.win.clear()
         self.win.refresh()
 
@@ -84,7 +90,7 @@ class Engine:
 
     def reloadMediaLibrary(self):
         # Tell the user we are doing work
-        infobox = Infobox("Fetching Media Library...\n\nThis may take a minute", self.win)
+        infobox = Infobox("Fetching Media Library...", self.win)
         infobox.render()
 
         # Clear the old media library
@@ -101,6 +107,26 @@ class Engine:
         media_library_screen.setCurrentPanel(0)
 
         paneldriver.change_media_panels(self.screens[1])
+
+    def reloadSavedPlaylists(self):
+        # Tell the user we are doing work
+        infobox = Infobox("Fetching Saved Playlists...", self.win)
+        infobox.render()
+
+        # Clear the old list of saved playlists
+        saved_playlists_screen = self.screens[2]
+        saved_playlists_panels = saved_playlists_screen.panels
+        for panel in saved_playlists_panels:
+            panel.clearItems()
+
+        # Fetch the new saved playlists from LMS
+        saved_playlists = lmswrapper.get_saved_playlists(self.server)
+        for playlist in saved_playlists:
+            saved_playlists_panels[0].addItem(playlist)
+
+        saved_playlists_screen.setCurrentPanel(0)
+
+        paneldriver.change_saved_playlist_panel(self.screens[2])
 
     def getCurrentScreen(self):
         return self.screens[self.currentScreenIndex]
@@ -285,6 +311,60 @@ class Engine:
                 infobox = Infobox("Adding Media Selection to Current Playlist...", self.win)
                 infobox.render()
                 lmswrapper.control_playlist(self.server, self.player, 'add', selected_item)
+            else:
+                pass # Do nothing
+
+        """ SAVED PLAYLISTS COMMANDS """
+        # These commands should only work while on the Saved Playlists screen
+        if self.currentScreenIndex == 2:
+            if(key == ord('f')):
+                # Reload the saved playlists
+                self.reloadSavedPlaylists()
+            elif(key == ord('j')):
+                # Move current panel's highlight down 1
+                panel = self.screens[2].getCurrentPanel()
+                paneldriver.move_down(panel, 1)
+                paneldriver.change_saved_playlist_panel(self.screens[2])
+            elif(key == ord('J')):
+                # Move current panel's highlight down half the panel size
+                panel = self.screens[2].getCurrentPanel()
+                paneldriver.move_down(panel, panel.height // 2)
+                paneldriver.change_saved_playlist_panel(self.screens[2])
+            elif(key == ord('G')):
+                # Move current panel's highlight down to the bottom
+                panel = self.screens[2].getCurrentPanel()
+                paneldriver.move_down(panel, len(panel.items))
+                paneldriver.change_saved_playlist_panel(self.screens[2])
+            elif(key == ord('k')):
+                # Move current panel's highlight up 2
+                panel = self.screens[2].getCurrentPanel()
+                paneldriver.move_up(panel, 1)
+                paneldriver.change_saved_playlist_panel(self.screens[2])
+            elif(key == ord('K')):
+                # Move current panel's highlight up half the panel size
+                panel = self.screens[2].getCurrentPanel()
+                paneldriver.move_up(panel, panel.height // 2)
+                paneldriver.change_saved_playlist_panel(self.screens[2])
+            elif(key == ord('g')):
+                # Move current panel's highlight up to the top
+                panel = self.screens[2].getCurrentPanel()
+                paneldriver.move_up(panel, len(panel.items))
+                paneldriver.change_saved_playlist_panel(self.screens[2])
+            elif(key == ord('h')):
+                # Move focused panel to the left
+                self.screens[2].decrementCurrentPanel()
+            elif(key == ord('l')):
+                # Move focused panel to the right
+                self.screens[2].incrementCurrentPanel()
+            elif(key == 10): # Key 10 is ENTER
+                # Grab the selected item and pass it to the LMS to load into the playlist
+                panel = self.screens[2].getCurrentPanel()
+                selected_item = paneldriver.get_selected_item(panel)
+                
+                # Let the user know we are doing work
+                infobox = Infobox("Loading Media Selection...", self.win)
+                infobox.render()
+                lmswrapper.play_saved_playlist(self.server, self.player, selected_item)
             else:
                 pass # Do nothing
 

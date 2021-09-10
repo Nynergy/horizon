@@ -3,7 +3,7 @@ This module aims to fill some holes in the lmsquery library, including adding
 my own query wrappers for common functions and server commands.
 """
 
-from classes.Music import Album, Artist, Song
+from classes.Music import Album, Artist, Playlist, Song
 
 """
 Songinfo queries return a list of dictionaries, so we use this function to
@@ -145,3 +145,25 @@ def toggle_power(lms, player):
     player_id = player.player_id
 
     lms.query(player_id, "power")
+
+def get_saved_playlists(lms):
+    playlists = []
+    playlist_shells = lms.query("", "playlists", 0, 9999)['playlists_loop']
+    for shell in playlist_shells:
+        playlist = Playlist(shell['id'], shell['playlist'], [])
+        songs = lms.query("", "playlists", "tracks", 0, 9999,
+                          f"playlist_id:{playlist.playlist_id}",
+                          "tags:aelsty")['playlisttracks_loop']
+        for song in songs:
+            s = Song(song['id'], song['title'], song['artist'], song['artist_id'],
+                     song['album'], song['album_id'], song['year'], song['tracknum'])
+            playlist.addSong(s)
+
+        playlists.append(playlist)
+
+    return playlists
+
+def play_saved_playlist(lms, player, playlist):
+    player_id = player.player_id
+
+    lms.query(player_id, "playlist", "play", playlist.name)

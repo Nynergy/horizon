@@ -666,6 +666,8 @@ def calc_string_width(text):
 The PlaylistPanel is the main panel of the Playlist screen, and shows
 information about the tracks in the current playlist (a.k.a the now-playing
 queue).
+
+This panel is also used to show the user their saved playlists.
 """
 
 PLAYLIST_TOP_BAR_HEIGHT = 1

@@ -40,3 +40,11 @@ def change_media_panels(media_library_screen):
 
 def get_selected_item(panel):
     return panel.getCurrentItem()
+
+def change_saved_playlist_panel(saved_playlists_screen):
+    panel_index = saved_playlists_screen.currentPanelIndex
+
+    if panel_index == 0:
+        # Get playlist info and put tracks into playlist panel
+        playlist = saved_playlists_screen.panels[0].getCurrentItem()
+        saved_playlists_screen.panels[1].setItems(playlist.songs)
