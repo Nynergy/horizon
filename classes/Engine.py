@@ -13,7 +13,7 @@ import screenmaker
 from util import Point
 
 from classes.Music import LMSPlayer
-from classes.Panel import Infobox, Listbox, Playbar, Prompt, Statusline
+from classes.Panel import Editbox, Infobox, Listbox, Playbar, Prompt, Statusline
 from classes.Screen import Screen
 
 TAB_NUMBERS = [
@@ -229,6 +229,9 @@ class Engine:
             elif(key == ord('/')):
                 # Stop playing
                 lmswrapper.stop_playing(self.server, self.player)
+            elif((key == ord('`')) or (key == ord('~'))): # Shift is optional
+                # Toggle player's mute state
+                lmswrapper.toggle_mute_state(self.server, self.player)
             elif(key == 10): # Key 10 is ENTER
                 # Grab the selected item's index and start playback from that index
                 panel = self.screens[0].getCurrentPanel()
@@ -240,6 +243,12 @@ class Engine:
             elif(key == ord('>')):
                 # Play the next track in the playlist
                 lmswrapper.play_song_at_playlist_index(self.server, self.player, '+1')
+            elif(key == ord(',')):
+                # Seek backward in the current track
+                lmswrapper.seek_track(self.server, self.player, '-5')
+            elif(key == ord('.')):
+                # Seek forward in the current track
+                lmswrapper.seek_track(self.server, self.player, '+5')
             elif(key == ord('r')):
                 # Toggle repeat mode
                 lmswrapper.toggle_playlist_mode(self.server, self.player, 'repeat')
@@ -248,6 +257,14 @@ class Engine:
                 lmswrapper.toggle_playlist_mode(self.server, self.player, 'shuffle')
                 # When we shuffle, playlist order may change, so reload it
                 self.reloadPlaylist()
+            elif(key == ord('n')):
+                # Rename currently connected player
+                editbox = Editbox(f"Enter a New Name for Player '{self.player.name}'", "Name:", self.win)
+                editbox.injectString(self.player.name)
+                new_name = editbox.getInput()
+                
+                if new_name != -1:
+                    lmswrapper.rename_player(self.server, self.player, new_name)
             else:
                 pass # Do nothing
 
@@ -357,14 +374,23 @@ class Engine:
                 # Move focused panel to the right
                 self.screens[2].incrementCurrentPanel()
             elif(key == 10): # Key 10 is ENTER
-                # Grab the selected item and pass it to the LMS to load into the playlist
+                # Grab the selected item and pass it to the LMS to play immediately
                 panel = self.screens[2].getCurrentPanel()
                 selected_item = paneldriver.get_selected_item(panel)
                 
                 # Let the user know we are doing work
                 infobox = Infobox("Loading Media Selection...", self.win)
                 infobox.render()
-                lmswrapper.play_saved_playlist(self.server, self.player, selected_item)
+                lmswrapper.load_saved_playlist(self.server, self.player, 'play', selected_item)
+            elif(key == ord(' ')):
+                # Grab the selected item and pass it to the LMS to append to the playlist
+                panel = self.screens[2].getCurrentPanel()
+                selected_item = paneldriver.get_selected_item(panel)
+                
+                # Let the user know we are doing work
+                infobox = Infobox("Loading Media Selection...", self.win)
+                infobox.render()
+                lmswrapper.load_saved_playlist(self.server, self.player, 'add', selected_item)
             else:
                 pass # Do nothing
 

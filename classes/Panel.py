@@ -8,6 +8,8 @@ import unicodedata
 import draw
 from util import Point, get_color_pair
 
+from classes.Form import Form
+
 """
 A Panel is a container for an arbitrary set of information. Since this will
 serve as the "abstract" baseclass, it has no idea how to render itself, though
@@ -302,6 +304,72 @@ class Listbox(Infobox):
         return None
 
 """
+An Editbox is a special kind of prompt that has an embedded form field for the
+user to input a string.
+"""
+
+class Editbox(Infobox):
+    def __init__(self, message, prompt, win, title=""):
+        super().__init__(message, win, title)
+        self.message = message
+        self.constructForm(prompt)
+
+    def generateDimensions(self, message, win):
+        (max_y, max_x) = win.getmaxyx()
+
+        # Determine the dimensions of the box and return them
+        y = ((max_y // 2) - 2)
+        x = max_x // 4
+        width = (max_x // 2) + (OUTER_PADDING + BORDER_PADDING)
+        height = 4 + (OUTER_PADDING + BORDER_PADDING)
+
+        ul = Point(y, x)
+        lr = Point(y + height, x + width)
+        dimensions = (ul, lr)
+
+        return dimensions
+
+    def constructForm(self, prompt):
+        # Origin is in reference to stdscr, so we need to offset it with our x, y
+        y_offset = self.y
+        x_offset = self.x
+        y = self.height - (FULL_PADDING // 2)
+        x = FULL_PADDING // 2
+        origin = Point(y + y_offset, x + x_offset)
+        self.form = Form(origin, self.width - FULL_PADDING, prompt)
+
+    def getInput(self):
+        self.drawBorder()
+        self.drawMessage()
+        self.drawQuitCommand()
+        self.win.refresh()
+        
+        user_input = self.form.edit()
+
+        return user_input
+
+    def drawMessage(self):
+        self.win.attron(curses.A_BOLD)
+        y = (BORDER_PADDING + INNER_PADDING) // 2
+        x = (self.width // 2) - (len(self.message) // 2)
+        p = Point(y, x)
+        draw.string(p, self.message, self.win)
+        self.win.attroff(curses.A_BOLD)
+
+    def drawQuitCommand(self):
+        quit_command = "Press F1 to Cancel"
+
+        self.win.attron(curses.A_BOLD)
+        y = self.height - 1
+        x = (self.width // 2) - (len(quit_command) // 2)
+        p = Point(y, x)
+        draw.string(p, quit_command, self.win)
+        self.win.attroff(curses.A_BOLD)
+
+    def injectString(self, string):
+        self.form.injectString(string)
+
+"""
 The Playbar is the constant panel of information about the currently playing
 track, including title, artist, album, duration, elapsed time, etc.
 
@@ -533,14 +601,22 @@ def translate_shuffle(state):
         raise ValueError(state)
 
 def get_volume_strings(volume):
+    # Check if player is muted (mixer volume is negative)
+    if volume < 0:
+        line_char = '#'
+        head_char = '#'
+    else:
+        line_char = '-'
+        head_char = '|'
+
     percentage = volume / 100
-    num_fill = max(1, round(VOLUME_BLOCKS * percentage))
+    num_fill = max(1, round(abs(VOLUME_BLOCKS * percentage)))
     num_empty = VOLUME_BLOCKS - num_fill
 
-    fill_string = '-' * (num_fill - 1)
-    empty_string = '-' * num_empty
+    fill_string = line_char * (num_fill - 1)
+    empty_string = line_char * num_empty
 
-    return (fill_string, '|', empty_string)
+    return (fill_string, head_char, empty_string)
 
 def translate_mode(mode):
     if mode == 'play':

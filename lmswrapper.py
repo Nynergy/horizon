@@ -163,7 +163,24 @@ def get_saved_playlists(lms):
 
     return playlists
 
-def play_saved_playlist(lms, player, playlist):
+def load_saved_playlist(lms, player, command, playlist):
     player_id = player.player_id
 
-    lms.query(player_id, "playlist", "play", playlist.name)
+    lms.query(player_id, "playlist", command, playlist.name)
+
+def seek_track(lms, player, amount):
+    player_id = player.player_id
+
+    lms.query(player_id, "time", amount)
+
+def toggle_mute_state(lms, player):
+    player_id = player.player_id
+
+    lms.query(player_id, "mixer", "muting")
+
+def rename_player(lms, player, new_name):
+    player_id = player.player_id
+
+    lms.query(player_id, "name", new_name)
+    # We also need to update the player name client-side
+    player.name = new_name
