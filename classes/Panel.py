@@ -308,6 +308,8 @@ track, including title, artist, album, duration, elapsed time, etc.
 This panel exists beneath every screen.
 """
 
+INPUT_TIMEOUT = 750
+
 class Playbar(Panel):
     def __init__(self, playbar_dimensions, title=""):
         super().__init__(playbar_dimensions, title)
@@ -317,7 +319,7 @@ class Playbar(Panel):
         non-blocking because then the CPU tries to kill itself. Instead, we opt
         for a modest timeout of a fraction of a second.
         """
-        self.win.timeout(250)
+        self.win.timeout(INPUT_TIMEOUT)
 
     def render(self, track_info):
         self.clearScreen()
@@ -392,7 +394,7 @@ class Playbar(Panel):
     def resize(self, new_dimensions):
         self.constructPanelWindow(new_dimensions)
         # Don't forget to re-enable the non-blocking call!
-        self.win.timeout(250)
+        self.win.timeout(INPUT_TIMEOUT)
 
 def convert_to_time(time):
     time = round(time)
