@@ -261,9 +261,15 @@ class Engine:
                 # Rename currently connected player
                 editbox = Editbox(f"Enter a New Name for Player '{self.player.name}'", "Name:", self.win)
                 editbox.injectString(self.player.name)
-                new_name = editbox.getInput()
+                (new_name, ret_code) = editbox.getInput()
+                while ret_code == 0:
+                    # Handle resizing
+                    self.resizeAll()
+                    editbox = Editbox(f"Enter a New Name for Player '{self.player.name}'", "Name:", self.win)
+                    editbox.injectString(new_name)
+                    (new_name, ret_code) = editbox.getInput()
                 
-                if new_name != -1:
+                if ret_code != -1:
                     lmswrapper.rename_player(self.server, self.player, new_name)
             else:
                 pass # Do nothing

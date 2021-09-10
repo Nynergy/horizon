@@ -344,9 +344,9 @@ class Editbox(Infobox):
         self.drawQuitCommand()
         self.win.refresh()
         
-        user_input = self.form.edit()
+        (user_input, ret_code) = self.form.edit()
 
-        return user_input
+        return (user_input, ret_code)
 
     def drawMessage(self):
         self.win.attron(curses.A_BOLD)

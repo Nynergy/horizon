@@ -69,11 +69,14 @@ class Form:
             if ch == 10: # Enter
                 # Submit the current buffer
                 curses.curs_set(0)
-                return self.trimWhitespace(self.buffer)
+                return (self.trimWhitespace(self.buffer), 1)
             elif ch == curses.KEY_F1:
                 # Cancel the edit
                 curses.curs_set(0)
-                return -1
+                return ("Cancelled", -1)
+            elif ch == curses.KEY_RESIZE:
+                # Return the resize code with the buffer as it exists
+                return (self.buffer, 0)
             else:
                 # Handle characters as input
                 self.handleInput(ch)
