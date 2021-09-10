@@ -650,7 +650,7 @@ class ListPanel(Panel):
         self.curr_item = min(self.curr_item, self.height - 3, max(0, len(self.items) - 1))
         if len(self.items) < self.height - 1:
             self.f_item = 0
-        self.l_item = min(len(self.items), self.height - 3)
+        self.l_item = min(len(self.items), self.f_item + (self.height - 3))
 
     def focus(self):
         self.focused = True
@@ -848,4 +848,4 @@ class PlaylistPanel(ListPanel):
                              max(0, len(self.items) - 1))
         if len(self.items) < self.height - (PLAYLIST_HEADERS_HEIGHT + 3):
             self.f_item = 0
-        self.l_item = min(len(self.items), self.height - (PLAYLIST_HEADERS_HEIGHT + 3))
+        self.l_item = min(len(self.items), self.f_item + (self.height - (PLAYLIST_HEADERS_HEIGHT + 3)))
