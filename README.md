@@ -8,8 +8,9 @@ A TUI controller for Logitech Media Server
 
 ![Showcase of horizon Playlist screen](playlist.png)
 ![Showcase of horizon Media Library screen](media_library.png)
+![Showcase of horizon Saved Playlists screen](saved_playlists.png)
 
-The above images showcase the Playlist and Media Library screens of horizon.
+The above images showcase the various screens of _horizon_.
 
 ## What is horizon and why does it exist?
 
@@ -32,20 +33,27 @@ end up discarding in favor of a browser-based option down the road.
 
 ## What exactly does it do?
 
-At the moment, you have two screens: The Playlist, and the Media Library. On the
-Playlist screen, you can view what the connected player currently has in its
-playlist, play selected tracks, toggle play/pause, toggle repeat/shuffle modes,
-skip to the previous/next track, change volume, turn the player on and off, and
-even select a totally different player to connect to.
+At the moment, you have three screens: The Playlist, the Media Library, and the
+Saved Playlists screen.
+
+On the Playlist screen, you can view what the connected player currently has in
+its playlist, play selected tracks, toggle play/pause, toggle repeat/shuffle
+modes, skip to the previous/next track, change volume, turn the player on and
+off, and even select a totally different player to connect to.
 
 In the Media Library, you can navigate between nested lists of artists, albums,
 and songs. You can load the selected media into the playlist (which clears out
 the playlist and loads the media, then begins playing it), or append the
 selected media to the end of the playlist.
 
+On the Saved Playlists screen, you can view your saved playlists, play
+individual tracks from any given playlist, or load the entire playlist into the
+play queue.
+
 There are still some features I need to add, such as deleting certain items from
-the playlist, and interacting with your _saved_ playlists, which is going to be
-another whole screen attached to the program.
+the play queue, saving new playlists, deleting saved playlists, renaming saved
+playlists, moving and reordering tracks in the play queue and any given saved
+playlist, and more.
 
 ## How can I run it?
 
@@ -103,8 +111,8 @@ Note that the repeat and shuffle mode indicators are at the top right of the
 screen, and use the following values:
 - Repeat
   - '-': No repeat
-  - 'r': Repeat playlist
-  - 'R': Repeat single track
+  - 'r': Repeat single track
+  - 'R': Repeat playlist
 - Shuffle
   - '-': No shuffle
   - 'z': Shuffle tracks
@@ -122,6 +130,19 @@ Key | Action
 <kbd>g</kbd> and <kbd>G</kbd> | change item focus to top/bottom of list
 <kbd>h</kbd> and <kbd>l</kbd> | change panel focus left and right
 <kbd>Space</kbd> | append highlighted media to current playlist
+<kbd>Enter</kbd> | empty playlist, load highlighted media, and play
+
+### Saved Playlist Commands
+
+These are commands that work on the Saved Playlists screen.
+
+Key | Action
+----|-------
+<kbd>f</kbd> | fetch/reload the saved playlists
+<kbd>j</kbd> and <kbd>k</kbd> | change item focus up and down
+<kbd>J</kbd> and <kbd>K</kbd> | change item focus up and down by half a page
+<kbd>g</kbd> and <kbd>G</kbd> | change item focus to top/bottom of list
+<kbd>h</kbd> and <kbd>l</kbd> | change panel focus left and right
 <kbd>Enter</kbd> | empty playlist, load highlighted media, and play
 
 ## Now what?
