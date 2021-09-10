@@ -569,10 +569,11 @@ class ListPanel(Panel):
     def render(self):
         self.clearScreen()
         self.drawTitleLine()
-        self.drawBottomLine()
         self.drawTitle()
         self.drawItems()
+        self.clearSides()
         self.drawIndicators()
+        self.drawBottomLine()
         self.win.refresh()
 
     def drawItems(self):
@@ -626,6 +627,16 @@ class ListPanel(Panel):
         draw.char(right, curses.ACS_DARROW, self.win)
         self.win.attroff(curses.A_ALTCHARSET)
 
+    def clearSides(self):
+        # Clear any mis-rendered item artifacts off the sides of the panel
+        left_ul = Point(1, 0)
+        left_lr = Point(self.height - 3, 0)
+        draw.v_line(left_ul, left_lr, ' ', self.win)
+
+        right_ul = Point(1, self.width - 1)
+        right_lr = Point(self.height - 3, self.width - 1)
+        draw.v_line(right_ul, right_lr, ' ', self.win)
+
     def getCurrentItemIndex(self):
         return self.curr_item
 
@@ -662,7 +673,8 @@ class ListPanel(Panel):
 
 def calc_string_width(text):
     fake_length = len(text.replace(u'’', u"'").encode('utf-8'))
-    return fake_length - sum(unicodedata.east_asian_width(c) in 'WF' for c in text)
+    num_wide = sum(unicodedata.east_asian_width(c) in 'WF' for c in text)
+    return fake_length - num_wide
 
 """
 The PlaylistPanel is the main panel of the Playlist screen, and shows
@@ -684,14 +696,14 @@ class PlaylistPanel(ListPanel):
     def constructColumnWidths(self):
         # Column names:      Title,  Album, Track,   Artist, Year
         # Relative lengths:  Longest Second Smallest Third   Fourth
-        # Relative %:        30%     20%    15%      20%     15%
+        # Relative %:        31%     31%    2%       31%     4%
         self.columnWidths = {}
 
         # Calculate how many cells wide each column needs to be
         title_x = round(self.width * 0.31)
         album_x = round(self.width * 0.31)
         track_x = max(7, round(self.width * 0.02))
-        artist_x = round(self.width * 0.32)
+        artist_x = round(self.width * 0.31)
         year_x = max(4, round(self.width * 0.04))
 
         self.columnWidths['title'] = title_x
@@ -703,12 +715,13 @@ class PlaylistPanel(ListPanel):
     def render(self):
         self.clearScreen()
         self.drawTitleLine()
-        self.drawBottomLine()
         self.drawTitle()
         self.drawColumnHeaders()
         self.drawHeadersUnderline()
         self.drawItems()
+        self.clearSides()
         self.drawIndicators()
+        self.drawBottomLine()
         self.win.refresh()
 
     def drawColumnHeaders(self):
@@ -831,6 +844,16 @@ class PlaylistPanel(ListPanel):
         draw.char(left, curses.ACS_DARROW, self.win)
         draw.char(right, curses.ACS_DARROW, self.win)
         self.win.attroff(curses.A_ALTCHARSET)
+
+    def clearSides(self):
+        # Clear any mis-rendered item artifacts off the sides of the panel
+        left_ul = Point(PLAYLIST_TOP_BAR_HEIGHT + PLAYLIST_HEADERS_HEIGHT, 0)
+        left_lr = Point(self.height - 3, 0)
+        draw.v_line(left_ul, left_lr, ' ', self.win)
+
+        right_ul = Point(PLAYLIST_TOP_BAR_HEIGHT + PLAYLIST_HEADERS_HEIGHT, self.width - 1)
+        right_lr = Point(self.height - 3, self.width - 1)
+        draw.v_line(right_ul, right_lr, ' ', self.win)
 
     def resize(self, newDimensions):
         self.constructPanelWindow(newDimensions)

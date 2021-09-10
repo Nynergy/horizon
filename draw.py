@@ -21,3 +21,12 @@ def h_line(p1, p2, ch, win):
     right = max(p1.x, p2.x)
     for i in range(left, right + 1):
         char(Point(p1.y, i), ch, win)
+
+def v_line(p1, p2, ch, win):
+    if (p1.x != p2.x) or (p1.y == p2.y):
+        raise ValueError((p1, p2))
+
+    top = min(p1.y, p2.y)
+    bottom = max(p1.y, p2.y)
+    for i in range(top, bottom + 1):
+        char(Point(i, p1.x), ch, win)
