@@ -3,24 +3,17 @@ The Engine is the heart of the application. It handles inputs, renders screens
 and panels, delegates fetching from the LMS, etc.
 """
 
-import curses
 import lmsquery
-import time
 
+import inputhandler
 import lmswrapper
 import paneldriver
 import screenmaker
 from util import Point
 
 from classes.Music import LMSPlayer
-from classes.Panel import Editbox, Infobox, Listbox, Playbar, Prompt, Statusline
+from classes.Panel import Infobox, Playbar, Statusline
 from classes.Screen import Screen
-
-TAB_NUMBERS = [
-                ord('1'), ord('2'), ord('3'),
-                ord('4'), ord('5'), ord('6'),
-                ord('7'), ord('8'), ord('9')
-              ]
 
 class Engine:
     def __init__(self, config, win):
@@ -194,341 +187,19 @@ class Engine:
 
     def handleInput(self, key):
         """ PLAYLIST COMMANDS """
-        # These commands should only work while on the Playlist screen
         if self.currentScreenIndex == 0:
-            if(key == ord('f')):
-                # Reload the playlist
-                self.reloadPlaylist()
-            elif(key == ord('j')):
-                # Move current panel's highlight down 1
-                panel = self.screens[0].getCurrentPanel()
-                paneldriver.move_down(panel, 1)
-            elif(key == ord('J')):
-                # Move current panel's highlight down half the panel height
-                panel = self.screens[0].getCurrentPanel()
-                paneldriver.move_down(panel, panel.height // 2)
-            elif(key == ord('G')):
-                # Move current panel's highlight down to the bottom
-                panel = self.screens[0].getCurrentPanel()
-                paneldriver.move_down(panel, len(panel.items))
-            elif(key == ord('k')):
-                # Move current panel's highlight up 1
-                panel = self.screens[0].getCurrentPanel()
-                paneldriver.move_up(panel, 1)
-            elif(key == ord('K')):
-                # Move current panel's highlight up half the panel height
-                panel = self.screens[0].getCurrentPanel()
-                paneldriver.move_up(panel, panel.height // 2)
-            elif(key == ord('g')):
-                # Move current panel's highlight up to the top
-                panel = self.screens[0].getCurrentPanel()
-                paneldriver.move_up(panel, len(panel.items))
-            elif(key == ord(' ')):
-                # Toggle play/pause
-                lmswrapper.toggle_play_mode(self.server, self.player)
-            elif(key == ord('/')):
-                # Stop playing
-                lmswrapper.stop_playing(self.server, self.player)
-            elif((key == ord('`')) or (key == ord('~'))): # Shift is optional
-                # Toggle player's mute state
-                lmswrapper.toggle_mute_state(self.server, self.player)
-            elif(key == 10): # Key 10 is ENTER
-                # Grab the selected item's index and start playback from that index
-                panel = self.screens[0].getCurrentPanel()
-                index = panel.getCurrentItemIndex()
-                lmswrapper.play_song_at_playlist_index(self.server, self.player, index)
-            elif(key == ord('<')):
-                # Play the previous track in the playlist
-                lmswrapper.play_song_at_playlist_index(self.server, self.player, '-1')
-            elif(key == ord('>')):
-                # Play the next track in the playlist
-                lmswrapper.play_song_at_playlist_index(self.server, self.player, '+1')
-            elif(key == ord(',')):
-                # Seek backward in the current track
-                lmswrapper.seek_track(self.server, self.player, '-5')
-            elif(key == ord('.')):
-                # Seek forward in the current track
-                lmswrapper.seek_track(self.server, self.player, '+5')
-            elif(key == ord('r')):
-                # Toggle repeat mode
-                lmswrapper.toggle_playlist_mode(self.server, self.player, 'repeat')
-            elif(key == ord('z')):
-                # Toggle shuffle mode
-                lmswrapper.toggle_playlist_mode(self.server, self.player, 'shuffle')
-                # When we shuffle, playlist order may change, so reload it
-                self.reloadPlaylist()
-            elif(key == ord('n')):
-                # Rename currently connected player
-                editbox = Editbox(f"Enter a New Name for Player '{self.player.name}'", "Name:", self.win)
-                editbox.injectString(self.player.name)
-                (new_name, ret_code) = editbox.getInput()
-                while ret_code == 0:
-                    # Handle resizing
-                    self.resizeAll()
-                    editbox = Editbox(f"Enter a New Name for Player '{self.player.name}'", "Name:", self.win)
-                    editbox.injectString(new_name)
-                    (new_name, ret_code) = editbox.getInput()
-                
-                if ret_code != -1:
-                    lmswrapper.rename_player(self.server, self.player, new_name)
-            elif(key == ord('S')):
-                # TODO: Implement handling for name collisions with existing playlists
-                # TODO: Implement handling for user hitting enter on empty string
-                # Save play queue contents to a new playlist
-                editbox = Editbox(f"Enter a Name for the New Playlist", "Name:", self.win)
-                (new_name, ret_code) = editbox.getInput()
-                while ret_code == 0:
-                    # Handle resizing
-                    self.resizeAll()
-                    editbox = Editbox(f"Enter a Name for the New Playlist", "Name:", self.win)
-                    (new_name, ret_code) = editbox.getInput()
-                
-                if ret_code != -1:
-                    lmswrapper.save_new_playlist(self.server, self.player, new_name)
-
-                    # We'll have to fetch the new list of saved playlists to get it
-                    self.renderAll()
-                    self.reloadSavedPlaylists()
-            else:
-                pass # Do nothing
+            inputhandler.handle_playlist_commands(self, key)
 
         """ MEDIA LIBRARY COMMANDS """
-        # These commands should only work while on the Media Library screen
         if self.currentScreenIndex == 1:
-            if(key == ord('f')):
-                # Reload the media library
-                self.reloadMediaLibrary()
-            elif(key == ord('j')):
-                # Move current panel's highlight down 1
-                panel = self.screens[1].getCurrentPanel()
-                paneldriver.move_down(panel, 1)
-                paneldriver.change_media_panels(self.screens[1])
-            elif(key == ord('J')):
-                # Move current panel's highlight down half the panel size
-                panel = self.screens[1].getCurrentPanel()
-                paneldriver.move_down(panel, panel.height // 2)
-                paneldriver.change_media_panels(self.screens[1])
-            elif(key == ord('G')):
-                # Move current panel's highlight down to the bottom
-                panel = self.screens[1].getCurrentPanel()
-                paneldriver.move_down(panel, len(panel.items))
-                paneldriver.change_media_panels(self.screens[1])
-            elif(key == ord('k')):
-                # Move current panel's highlight up 1
-                panel = self.screens[1].getCurrentPanel()
-                paneldriver.move_up(panel, 1)
-                paneldriver.change_media_panels(self.screens[1])
-            elif(key == ord('K')):
-                # Move current panel's highlight up half the panel size
-                panel = self.screens[1].getCurrentPanel()
-                paneldriver.move_up(panel, panel.height // 2)
-                paneldriver.change_media_panels(self.screens[1])
-            elif(key == ord('g')):
-                # Move current panel's highlight up to the top
-                panel = self.screens[1].getCurrentPanel()
-                paneldriver.move_up(panel, len(panel.items))
-                paneldriver.change_media_panels(self.screens[1])
-            elif(key == ord('h')):
-                # Move focused panel to the left
-                self.screens[1].decrementCurrentPanel()
-            elif(key == ord('l')):
-                # Move focused panel to the right
-                self.screens[1].incrementCurrentPanel()
-            elif(key == 10): # Key 10 is ENTER
-                # Grab the selected item and pass it to the LMS to load into the playlist
-                panel = self.screens[1].getCurrentPanel()
-                selected_item = paneldriver.get_selected_item(panel)
-                
-                # Let the user know we are doing work
-                infobox = Infobox("Loading Media Selection...", self.win)
-                infobox.render()
-                lmswrapper.control_playlist(self.server, self.player, 'load', selected_item)
-            elif(key == ord(' ')):
-                # Grab the selected item and pass it to the LMS to append to the playlist
-                panel = self.screens[1].getCurrentPanel()
-                selected_item = paneldriver.get_selected_item(panel)
-                
-                # Let the user know we are doing work
-                infobox = Infobox("Adding Media Selection to Current Playlist...", self.win)
-                infobox.render()
-                lmswrapper.control_playlist(self.server, self.player, 'add', selected_item)
-            else:
-                pass # Do nothing
+            inputhandler.handle_media_library_commands(self, key)
 
         """ SAVED PLAYLISTS COMMANDS """
-        # These commands should only work while on the Saved Playlists screen
         if self.currentScreenIndex == 2:
-            if(key == ord('f')):
-                # Reload the saved playlists
-                self.reloadSavedPlaylists()
-            elif(key == ord('j')):
-                # Move current panel's highlight down 1
-                panel = self.screens[2].getCurrentPanel()
-                paneldriver.move_down(panel, 1)
-                paneldriver.change_saved_playlist_panel(self.screens[2])
-            elif(key == ord('J')):
-                # Move current panel's highlight down half the panel size
-                panel = self.screens[2].getCurrentPanel()
-                paneldriver.move_down(panel, panel.height // 2)
-                paneldriver.change_saved_playlist_panel(self.screens[2])
-            elif(key == ord('G')):
-                # Move current panel's highlight down to the bottom
-                panel = self.screens[2].getCurrentPanel()
-                paneldriver.move_down(panel, len(panel.items))
-                paneldriver.change_saved_playlist_panel(self.screens[2])
-            elif(key == ord('k')):
-                # Move current panel's highlight up 2
-                panel = self.screens[2].getCurrentPanel()
-                paneldriver.move_up(panel, 1)
-                paneldriver.change_saved_playlist_panel(self.screens[2])
-            elif(key == ord('K')):
-                # Move current panel's highlight up half the panel size
-                panel = self.screens[2].getCurrentPanel()
-                paneldriver.move_up(panel, panel.height // 2)
-                paneldriver.change_saved_playlist_panel(self.screens[2])
-            elif(key == ord('g')):
-                # Move current panel's highlight up to the top
-                panel = self.screens[2].getCurrentPanel()
-                paneldriver.move_up(panel, len(panel.items))
-                paneldriver.change_saved_playlist_panel(self.screens[2])
-            elif(key == ord('h')):
-                # Move focused panel to the left
-                self.screens[2].decrementCurrentPanel()
-            elif(key == ord('l')):
-                # Move focused panel to the right
-                self.screens[2].incrementCurrentPanel()
-            elif(key == 10): # Key 10 is ENTER
-                # Grab the selected item and pass it to the LMS to play immediately
-                panel = self.screens[2].getCurrentPanel()
-                selected_item = paneldriver.get_selected_item(panel)
-                
-                # Let the user know we are doing work
-                infobox = Infobox("Loading Media Selection...", self.win)
-                infobox.render()
-                lmswrapper.load_saved_playlist(self.server, self.player, 'play', selected_item)
-            elif(key == ord(' ')):
-                # Grab the selected item and pass it to the LMS to append to the playlist
-                panel = self.screens[2].getCurrentPanel()
-                selected_item = paneldriver.get_selected_item(panel)
-                
-                # Let the user know we are doing work
-                infobox = Infobox("Loading Media Selection...", self.win)
-                infobox.render()
-                lmswrapper.load_saved_playlist(self.server, self.player, 'add', selected_item)
-            elif(key == ord('n')):
-                # TODO: Handle case where user hits 'n' while highlighting a track instead of a playlist
-                # Rename highlighted saved playlist
-                panel = self.screens[2].getCurrentPanel()
-                playlist = paneldriver.get_selected_item(panel)
-
-                editbox = Editbox(f"Enter a New Name for Playlist '{playlist.name}'", "Name:", self.win)
-                editbox.injectString(playlist.name)
-                (new_name, ret_code) = editbox.getInput()
-                while ret_code == 0:
-                    # Handle resizing
-                    self.resizeAll()
-                    editbox = Editbox(f"Enter a New Name for Playlist '{playlist.name}'", "Name:", self.win)
-                    editbox.injectString(new_name)
-                    (new_name, ret_code) = editbox.getInput()
-                
-                if ret_code != -1:
-                    # We have to dry-run first to see if there is a name collision
-                    conflict = lmswrapper.rename_playlist(self.server, playlist.playlist_id, new_name, True)
-                    if conflict:
-                        self.renderAll()
-
-                        # Prompt the user if they actually want to overwrite the playlist
-                        prompt = Prompt("A playlist with this name already exists. Overwrite it?", self.win)
-                        confirmed = prompt.getConfirmation()
-                        while confirmed == "RESIZE":
-                            self.resizeAll()
-                            prompt = Prompt("A playlist with this name already exists. Overwrite it?", self.win)
-                            confirmed = prompt.getConfirmation()
-                        if confirmed:
-                            # Clear the playlist
-                            self.renderAll()
-
-                            # Let the user know we are doing work
-                            infobox = Infobox("Renaming Saved Playlist...", self.win)
-                            infobox.render()
-                            lmswrapper.rename_playlist(self.server, playlist.playlist_id, new_name, False)
-
-                            self.reloadSavedPlaylists()
-                    else: # No conflict, go right ahead
-                        # Clear the playlist
-                        self.renderAll()
-
-                        # Let the user know we are doing work
-                        infobox = Infobox("Renaming Saved Playlist...", self.win)
-                        infobox.render()
-                        lmswrapper.rename_playlist(self.server, playlist.playlist_id, new_name, False)
-
-                        self.reloadSavedPlaylists()
-            else:
-                pass # Do nothing
+            inputhandler.handle_saved_playlist_commands(self, key)
 
         """ GENERIC COMMANDS """
-        # These commands should be run regardless of what screen is being shown
-        if(key == ord('q')):
-            self.quit = True
-        elif(key in TAB_NUMBERS):
-            if key == ord('1'):
-                # If switching to the playlist screen, reload the playlist first
-                self.reloadPlaylist()
-            self.changeTab(key)
-        elif(key == ord('c')):
-            # Prompt the user if they actually want to clear the playlist
-            prompt = Prompt("Really clear the current playlist?", self.win)
-            confirmed = prompt.getConfirmation()
-            while confirmed == "RESIZE":
-                self.resizeAll()
-                prompt = Prompt("Really clear the current playlist?", self.win)
-                confirmed = prompt.getConfirmation()
-            if confirmed:
-                # Clear the playlist
-                self.renderAll()
-
-                # Let the user know we are doing work
-                infobox = Infobox("Clearing Current Playlist...", self.win)
-                infobox.render()
-                lmswrapper.clear_playlist(self.server, self.player)
-
-                # If currently on the Playlist screen, refresh it to show changes
-                if self.currentScreenIndex == 0:
-                    self.reloadPlaylist()
-        elif(key == ord('-')):
-            # Volume down
-            lmswrapper.change_volume(self.server, self.player, '-5')
-        elif((key == ord('=')) or (key == ord('+'))): # Shift is optional
-            # Volume up
-            lmswrapper.change_volume(self.server, self.player, '+5')
-        elif(key == ord('o')):
-            # Toggle the player ON and OFF
-            lmswrapper.toggle_power(self.server, self.player)
-        elif(key == ord('p')):
-            # Present a list of players found, and choose one to connect to
-            players = []
-            player_list = self.server.get_players()
-            for player in player_list:
-                p = LMSPlayer(player['name'], player['playerid'])
-                players.append(p)
-            listbox = Listbox("Please Select a Player", players, self.win)
-            choice = listbox.getChoice()
-            while choice == "RESIZE":
-                self.resizeAll()
-                listbox = Listbox("Please Select a Player", players, self.win)
-                choice = listbox.getChoice()
-            if choice != None:
-                self.player = choice
-
-                # If the user is on the Playlist screen, reload it
-                if self.currentScreenIndex == 0:
-                    self.reloadPlaylist()
-        elif(key == curses.KEY_RESIZE):
-            # Begin a cascading call to resize all screens/panels/windows/etc
-            self.resizeAll()
-        else:
-            pass # Do nothing
+        inputhandler.handle_generic_commands(self, key)
 
     def resizeAll(self):
         # First, reset the Engine's internal sizes
