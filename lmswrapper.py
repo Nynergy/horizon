@@ -194,3 +194,8 @@ def rename_playlist(lms, playlist_id, new_name, is_dry_run):
         return True if 'overwritten_playlist_id' in ret else False
 
     lms.query("", "playlists", "rename", f"playlist_id:{playlist_id}", f"newname:{new_name}")
+
+def save_new_playlist(lms, player, new_name):
+    player_id = player.player_id
+
+    lms.query(player_id, "playlist", "save", new_name)

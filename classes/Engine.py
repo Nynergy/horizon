@@ -271,6 +271,23 @@ class Engine:
                 
                 if ret_code != -1:
                     lmswrapper.rename_player(self.server, self.player, new_name)
+            elif(key == ord('S')):
+                # TODO: Implement handling for name collisions with existing playlists
+                # Save play queue contents to a new playlist
+                editbox = Editbox(f"Enter a Name for the New Playlist", "Name:", self.win)
+                (new_name, ret_code) = editbox.getInput()
+                while ret_code == 0:
+                    # Handle resizing
+                    self.resizeAll()
+                    editbox = Editbox(f"Enter a Name for the New Playlist", "Name:", self.win)
+                    (new_name, ret_code) = editbox.getInput()
+                
+                if ret_code != -1:
+                    lmswrapper.save_new_playlist(self.server, self.player, new_name)
+
+                    # We'll have to fetch the new list of saved playlists to get it
+                    self.renderAll()
+                    self.reloadSavedPlaylists()
             else:
                 pass # Do nothing
 
