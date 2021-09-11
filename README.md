@@ -2,8 +2,6 @@
 
 A TUI controller for Logitech Media Server
 
-### *This is a work in progress :: Use at your own risk :)*
-
 ------------------------------------------------------------------------------
 
 ![Showcase of horizon Playlist screen](playlist.png)
@@ -33,13 +31,14 @@ end up discarding in favor of a browser-based option down the road.
 
 ## What exactly does it do?
 
-At the moment, you have three screens: The Playlist, the Media Library, and the
-Saved Playlists screen.
+You have three screens: The Playlist, the Media Library, and the Saved Playlists
+screen.
 
 On the Playlist screen, you can view what the connected player currently has in
 its playlist, play selected tracks, toggle play/pause, toggle repeat/shuffle
 modes, skip to the previous/next track, change volume, turn the player on and
-off, and even select a totally different player to connect to.
+off, move and delete tracks, save the contents of the play queue to a new
+playlist, and even select a totally different player to connect to.
 
 In the Media Library, you can navigate between nested lists of artists, albums,
 and songs. You can load the selected media into the playlist (which clears out
@@ -47,13 +46,9 @@ the playlist and loads the media, then begins playing it), or append the
 selected media to the end of the playlist.
 
 On the Saved Playlists screen, you can view your saved playlists, play
-individual tracks from any given playlist, or load the entire playlist into the
-play queue.
-
-There are still some features I need to add, such as deleting certain items from
-the play queue, saving new playlists, deleting saved playlists, renaming saved
-playlists, moving and reordering tracks in the play queue and any given saved
-playlist, and more.
+individual tracks from any given playlist, load the entire playlist into the
+play queue, rename playlists, delete playlists, and move and delete tracks
+within playlists.
 
 ## How can I run it?
 
@@ -75,6 +70,8 @@ file provided in the repository for how to customize it.
 
 Here are the commands that exist right now:
 
+## Normal Mode
+
 ### General Commands
 
 These are commands that should work on any screen.
@@ -90,6 +87,13 @@ Key | Action
 <kbd>=</kbd> or <kbd>+</kbd> | volume up
 <kbd>o</kbd> | toggle player on/off
 <kbd>p</kbd> | pick player to connect to
+<kbd>m</kbd> | enter move mode
+<kbd>d</kbd> | enter delete mode
+<kbd>R</kbd> | rescan music database
+
+Note that you can only enter move and delete modes while focused on a playlist
+panel, such as the play queue on the Playlist screen, or the tracklist of a
+saved playlist on the Saved Playlists screen.
 
 ### Playlist Commands
 
@@ -151,8 +155,36 @@ Key | Action
 <kbd>Enter</kbd> | empty playlist, load highlighted media, and play
 <kbd>Space</kbd> | append highlighted media to current playlist
 <kbd>n</kbd> | rename highlighted playlist
+<kbd>D</kbd> | delete highlighted playlist
+
+## Move Mode
+
+These are commands that work while in move mode.
+
+Key | Action
+----|-------
+<kbd>q</kbd> | exit move mode
+<kbd>m</kbd> | confirm track movement and exit move mode
+<kbd>j</kbd> and <kbd>k</kbd> | change item focus up and down
+<kbd>J</kbd> and <kbd>K</kbd> | change item focus up and down by half a page
+<kbd>g</kbd> and <kbd>G</kbd> | change item focus to top/bottom of list
+
+## Delete Mode
+
+These are commands that work while in delete mode.
+
+Key | Action
+----|-------
+<kbd>q</kbd> | exit delete mode
+<kbd>Space</kbd> | mark/unmark highlighted item for deletion
+<kbd>d</kbd> | confirm track deletions and exit delete mode
+<kbd>j</kbd> and <kbd>k</kbd> | change item focus up and down
+<kbd>J</kbd> and <kbd>K</kbd> | change item focus up and down by half a page
+<kbd>g</kbd> and <kbd>G</kbd> | change item focus to top/bottom of list
 
 ## Now what?
 
 Use it as it exists now, wait for more updates, I don't know. It's open source
-code I spill out in my free time, do whatever the heck you want with it. :)
+code I spill out in my free time, do whatever the heck you want with it.
+
+Go enjoy some music. :)
