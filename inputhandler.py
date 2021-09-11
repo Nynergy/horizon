@@ -369,6 +369,11 @@ def handle_generic_commands(engine, key):
             engine.mode = Mode.MOVE
             # Tell the panel to store the start index
             panel.setMoveStart()
+    elif(key == ord('d')):
+        # Only enter delete mode if focused on a PlaylistPanel
+        panel = engine.getCurrentScreen().getCurrentPanel()
+        if isinstance(panel, PlaylistPanel):
+            engine.mode = Mode.DELETE
     elif(key == curses.KEY_RESIZE):
         # Begin a cascading call to resize all screens/panels/windows/etc
         engine.resizeAll()
@@ -398,6 +403,76 @@ def handle_move_mode_commands(engine, key):
                     engine.reloadSavedPlaylists()
                     # Move focused panel back to the playlist tracks
                     engine.screens[2].incrementCurrentPanel()
+    elif(key == ord('j')):
+        # Move current panel's highlight down 1
+        panel = engine.getCurrentScreen().getCurrentPanel()
+        paneldriver.move_down(panel, 1)
+    elif(key == ord('J')):
+        # Move current panel's highlight down half the panel height
+        panel = engine.getCurrentScreen().getCurrentPanel()
+        paneldriver.move_down(panel, panel.height // 2)
+    elif(key == ord('G')):
+        # Move current panel's highlight down to the bottom
+        panel = engine.getCurrentScreen().getCurrentPanel()
+        paneldriver.move_down(panel, len(panel.items))
+    elif(key == ord('k')):
+        # Move current panel's highlight up 1
+        panel = engine.getCurrentScreen().getCurrentPanel()
+        paneldriver.move_up(panel, 1)
+    elif(key == ord('K')):
+        # Move current panel's highlight up half the panel height
+        panel = engine.getCurrentScreen().getCurrentPanel()
+        paneldriver.move_up(panel, panel.height // 2)
+    elif(key == ord('g')):
+        # Move current panel's highlight up to the top
+        panel = engine.getCurrentScreen().getCurrentPanel()
+        paneldriver.move_up(panel, len(panel.items))
+    elif(key == curses.KEY_RESIZE):
+        # Begin a cascading call to resize all screens/panels/windows/etc
+        engine.resizeAll()
+    else:
+        pass # Do nothing
+
+def handle_delete_mode_commands(engine, key):
+    if(key == ord('q')):
+        # Exit delete mode without serializing changes
+        panel = engine.getCurrentScreen().getCurrentPanel()
+        panel.getMarkedItems()
+        engine.mode = Mode.NORMAL
+    elif(key == ord(' ')):
+        # Mark an item for deletion
+        panel = engine.getCurrentScreen().getCurrentPanel()
+        panel.markItem()
+    elif(key == ord('d')):
+        # Only enter delete mode if focused on a PlaylistPanel
+        panel = engine.getCurrentScreen().getCurrentPanel()
+        if isinstance(panel, PlaylistPanel):
+            engine.mode = Mode.NORMAL
+            marked_items = panel.getMarkedItems()
+            if marked_items != []:
+                prompt = Prompt(f"Really delete tracks?", engine.win)
+                confirmed = prompt.getConfirmation()
+                while confirmed == "RESIZE":
+                    engine.resizeAll()
+                    prompt = Prompt("Really delete tracks?", engine.win)
+                    confirmed = prompt.getConfirmation()
+                if confirmed:
+                    # Clear the playlist
+                    engine.renderAll()
+
+                    # Let the user know we are doing work
+                    infobox = Infobox("Deleting Tracks...", engine.win)
+                    infobox.render()
+                    # Use different queries based on the current screen
+                    if engine.currentScreenIndex == 0:
+                        lmswrapper.delete_tracks_from_play_queue(engine.server, engine.player, marked_items)
+                        engine.reloadPlaylist()
+                    elif engine.currentScreenIndex == 2:
+                        playlist = engine.screens[2].panels[0].getCurrentItem()
+                        lmswrapper.delete_tracks_from_saved_playlist(engine.server,
+                                                                     playlist.playlist_id,
+                                                                     marked_items)
+                        engine.reloadSavedPlaylists()
     elif(key == ord('j')):
         # Move current panel's highlight down 1
         panel = engine.getCurrentScreen().getCurrentPanel()

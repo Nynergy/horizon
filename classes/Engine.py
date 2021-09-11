@@ -207,6 +207,9 @@ class Engine:
         elif self.mode == Mode.MOVE:
             """ MOVE MODE COMMANDS """
             inputhandler.handle_move_mode_commands(self, key)
+        elif self.mode == Mode.DELETE:
+            """ DELETE MODE COMMANDS """
+            inputhandler.handle_delete_mode_commands(self, key)
 
     def resizeAll(self):
         # First, reset the Engine's internal sizes

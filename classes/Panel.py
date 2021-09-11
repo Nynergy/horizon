@@ -501,6 +501,7 @@ class PlaylistPanel(ListPanel):
         self.l_item = min(len(self.items), self.height - (PLAYLIST_HEADERS_HEIGHT + 3))
         self.constructColumnWidths()
         self.moveStart = -1
+        self.markedItems = []
 
     def constructColumnWidths(self):
         # Column names:      Title,  Album, Track,   Artist, Year
@@ -601,35 +602,35 @@ class PlaylistPanel(ListPanel):
         absolute_offset = item_y - (PLAYLIST_HEADERS_HEIGHT + PLAYLIST_TOP_BAR_HEIGHT) + self.f_item
 
         attr = get_color_pair("PlaylistSongTitle")
-        if absolute_offset == self.moveStart:
+        if absolute_offset == self.moveStart or absolute_offset in self.markedItems:
             attr = curses.A_BOLD | curses.A_REVERSE
         self.win.attron(attr)
         self.drawColumn('title', title, item_y)
         self.win.attroff(attr)
 
         attr = get_color_pair("PlaylistSongAlbum")
-        if absolute_offset == self.moveStart:
+        if absolute_offset == self.moveStart or absolute_offset in self.markedItems:
             attr = curses.A_BOLD | curses.A_REVERSE
         self.win.attron(attr)
         self.drawColumn('album', album, item_y)
         self.win.attroff(attr)
 
         attr = get_color_pair("PlaylistSongTracknum")
-        if absolute_offset == self.moveStart:
+        if absolute_offset == self.moveStart or absolute_offset in self.markedItems:
             attr = curses.A_BOLD | curses.A_REVERSE
         self.win.attron(attr)
         self.drawColumn('track', track, item_y)
         self.win.attroff(attr)
 
         attr = get_color_pair("PlaylistSongArtist")
-        if absolute_offset == self.moveStart:
+        if absolute_offset == self.moveStart or absolute_offset in self.markedItems:
             attr = curses.A_BOLD | curses.A_REVERSE
         self.win.attron(attr)
         self.drawColumn('artist', artist, item_y)
         self.win.attroff(attr)
 
         attr = get_color_pair("PlaylistSongYear")
-        if absolute_offset == self.moveStart:
+        if absolute_offset == self.moveStart or absolute_offset in self.markedItems:
             attr = curses.A_BOLD | curses.A_REVERSE
         self.win.attron(attr)
         p = Point(item_y, self.width - 5)
@@ -704,3 +705,15 @@ class PlaylistPanel(ListPanel):
         move_end = self.curr_item
         
         return (move_start, move_end)
+
+    def markItem(self):
+        if self.curr_item not in self.markedItems:
+            self.markedItems.append(self.curr_item)
+        else:
+            self.markedItems.remove(self.curr_item)
+
+    def getMarkedItems(self):
+        marked = self.markedItems
+        self.markedItems = []
+
+        return marked

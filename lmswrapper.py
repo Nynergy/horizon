@@ -211,3 +211,17 @@ def move_track_in_saved_playlist(lms, playlist_id, start, end):
 
 def delete_saved_playlist(lms, playlist_id):
     lms.query("", "playlists", "delete", f"playlist_id:{playlist_id}")
+
+def delete_tracks_from_play_queue(lms, player, marked_items):
+    player_id = player.player_id
+
+    # Sort our items in descending order to prevent invalidated indices
+    marked_items.sort(reverse=True)
+    for index in marked_items:
+        lms.query(player_id, "playlist", "delete", index)
+
+def delete_tracks_from_saved_playlist(lms, playlist_id, marked_items):
+    # Sort items in descender order to prevent invalidated indices
+    marked_items.sort(reverse=True)
+    for index in marked_items:
+        lms.query("", "playlists", "edit", f"playlist_id:{playlist_id}", "cmd:delete", f"index:{index}")
