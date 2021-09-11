@@ -84,6 +84,7 @@ Key | Action
 <kbd>q</kbd> | quit horizon
 <kbd>1</kbd> | open the Playlist screen
 <kbd>2</kbd> | open the Media Library screen
+<kbd>3</kbd> | open the Saved Playlists screen
 <kbd>c</kbd> | clear the current playlist
 <kbd>-</kbd> | volume down
 <kbd>=</kbd> or <kbd>+</kbd> | volume up
@@ -102,10 +103,14 @@ Key | Action
 <kbd>g</kbd> and <kbd>G</kbd> | change track focus to top/bottom of list
 <kbd>Space</kbd> | toggle play/pause
 <kbd>/</kbd> | stop playing
+<kbd>\`</kbd> or <kbd>~</kbd> | toggle player mute
 <kbd>Enter</kbd> | start playing from highlighted track
 <kbd><</kbd> and <kbd>></kbd> | skip to previous/next track in playlist
+<kbd>,</kbd> and <kbd>.</kbd> | seek +/- 5 seconds within current track
 <kbd>r</kbd> | toggle repeat mode
 <kbd>z</kbd> | toggle shuffle mode
+<kbd>n</kbd> | rename the currently connected player
+<kbd>S</kbd> | save contents of play queue into a new playlist
 
 Note that the repeat and shuffle mode indicators are at the top right of the
 screen, and use the following values:
@@ -129,8 +134,8 @@ Key | Action
 <kbd>J</kbd> and <kbd>K</kbd> | change item focus up and down by half a page
 <kbd>g</kbd> and <kbd>G</kbd> | change item focus to top/bottom of list
 <kbd>h</kbd> and <kbd>l</kbd> | change panel focus left and right
-<kbd>Space</kbd> | append highlighted media to current playlist
 <kbd>Enter</kbd> | empty playlist, load highlighted media, and play
+<kbd>Space</kbd> | append highlighted media to current playlist
 
 ### Saved Playlist Commands
 
@@ -144,6 +149,8 @@ Key | Action
 <kbd>g</kbd> and <kbd>G</kbd> | change item focus to top/bottom of list
 <kbd>h</kbd> and <kbd>l</kbd> | change panel focus left and right
 <kbd>Enter</kbd> | empty playlist, load highlighted media, and play
+<kbd>Space</kbd> | append highlighted media to current playlist
+<kbd>n</kbd> | rename highlighted playlist
 
 ## Now what?
 

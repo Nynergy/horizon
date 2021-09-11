@@ -273,6 +273,7 @@ class Engine:
                     lmswrapper.rename_player(self.server, self.player, new_name)
             elif(key == ord('S')):
                 # TODO: Implement handling for name collisions with existing playlists
+                # TODO: Implement handling for user hitting enter on empty string
                 # Save play queue contents to a new playlist
                 editbox = Editbox(f"Enter a Name for the New Playlist", "Name:", self.win)
                 (new_name, ret_code) = editbox.getInput()
@@ -415,6 +416,7 @@ class Engine:
                 infobox.render()
                 lmswrapper.load_saved_playlist(self.server, self.player, 'add', selected_item)
             elif(key == ord('n')):
+                # TODO: Handle case where user hits 'n' while highlighting a track instead of a playlist
                 # Rename highlighted saved playlist
                 panel = self.screens[2].getCurrentPanel()
                 playlist = paneldriver.get_selected_item(panel)
