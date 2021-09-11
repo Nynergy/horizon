@@ -61,6 +61,11 @@ def get_player_info(lms, player):
     player_id = player.player_id
     status = lms.query(player_id, 'status', 0, 9999)
 
+    # We also want the status of the server rescan
+    res = lms.query("", "rescan", "?")
+    scan_status = True if res['_rescan'] == 1 else False
+    status['scan_status'] = scan_status
+
     return status
 
 def get_media_library(lms):
@@ -225,3 +230,6 @@ def delete_tracks_from_saved_playlist(lms, playlist_id, marked_items):
     marked_items.sort(reverse=True)
     for index in marked_items:
         lms.query("", "playlists", "edit", f"playlist_id:{playlist_id}", "cmd:delete", f"index:{index}")
+
+def trigger_rescan(lms):
+    lms.query("", "rescan")

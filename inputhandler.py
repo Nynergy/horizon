@@ -374,6 +374,16 @@ def handle_generic_commands(engine, key):
         panel = engine.getCurrentScreen().getCurrentPanel()
         if isinstance(panel, PlaylistPanel):
             engine.mode = Mode.DELETE
+    elif(key == ord('R')):
+        # Prompt user if they want to start a database rescan
+        prompt = Prompt("Rescan the Music Database?", engine.win)
+        confirmed = prompt.getConfirmation()
+        while confirmed == "RESIZE":
+            engine.resizeAll()
+            prompt = Prompt("Rescan the Music Database?", engine.win)
+            confirmed = prompt.getConfirmation()
+        if confirmed:
+            lmswrapper.trigger_rescan(engine.server)
     elif(key == curses.KEY_RESIZE):
         # Begin a cascading call to resize all screens/panels/windows/etc
         engine.resizeAll()

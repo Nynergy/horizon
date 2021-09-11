@@ -215,6 +215,7 @@ class Statusline(Panel):
         Things I'm interested in:
         - player_name
         - power (is the player powered on?)
+        - rescan status (is the server rescanning?)
         *These next ones only return if the player is powered*
         - mixer_volume (render a volume bar)
         - mode (play, pause, etc)
@@ -239,6 +240,14 @@ class Statusline(Panel):
         self.drawStatusPiece("Power:")
         self.win.attroff(curses.A_BOLD)
         self.drawStatusPiece(power_state)
+
+        if player_info['scan_status']:
+            # Server is rescanning, render it next to power state
+            self.drawStatusPiece('-')
+
+            self.win.attron(curses.A_BOLD)
+            self.drawStatusPiece("RESCANNING...")
+            self.win.attroff(curses.A_BOLD)
 
         if power_state == "ON":
             mixer_volume = player_info['mixer volume']
