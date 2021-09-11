@@ -9,7 +9,7 @@ import inputhandler
 import lmswrapper
 import paneldriver
 import screenmaker
-from util import Point
+from util import Mode, Point
 
 from classes.Box import Infobox
 from classes.Music import LMSPlayer
@@ -24,6 +24,7 @@ class Engine:
         self.player = self.getPlayers()
         self.win = win
         (self.height, self.width) = self.win.getmaxyx()
+        self.mode = Mode.NORMAL # Start in normal mode
         self.constructScreens()
         self.constructStatusline()
         self.constructPlaybar()
@@ -169,7 +170,8 @@ class Engine:
     def renderStatusline(self):
         # Fetch status info for current player
         player_info = lmswrapper.get_player_info(self.server, self.player)
-        self.statusline.render(player_info)
+        # Statusline needs player info, as well as our current mode
+        self.statusline.render(player_info, self.mode)
 
     def renderCurrentScreen(self):
         current_screen = self.getCurrentScreen()
@@ -187,20 +189,24 @@ class Engine:
         return key
 
     def handleInput(self, key):
-        """ PLAYLIST COMMANDS """
-        if self.currentScreenIndex == 0:
-            inputhandler.handle_playlist_commands(self, key)
+        if self.mode == Mode.NORMAL:
+            """ PLAYLIST COMMANDS """
+            if self.currentScreenIndex == 0:
+                inputhandler.handle_playlist_commands(self, key)
 
-        """ MEDIA LIBRARY COMMANDS """
-        if self.currentScreenIndex == 1:
-            inputhandler.handle_media_library_commands(self, key)
+            """ MEDIA LIBRARY COMMANDS """
+            if self.currentScreenIndex == 1:
+                inputhandler.handle_media_library_commands(self, key)
 
-        """ SAVED PLAYLISTS COMMANDS """
-        if self.currentScreenIndex == 2:
-            inputhandler.handle_saved_playlist_commands(self, key)
+            """ SAVED PLAYLISTS COMMANDS """
+            if self.currentScreenIndex == 2:
+                inputhandler.handle_saved_playlist_commands(self, key)
 
-        """ GENERIC COMMANDS """
-        inputhandler.handle_generic_commands(self, key)
+            """ GENERIC COMMANDS """
+            inputhandler.handle_generic_commands(self, key)
+        elif self.mode == Mode.MOVE:
+            """ MOVE MODE COMMANDS """
+            inputhandler.handle_move_mode_commands(self, key)
 
     def resizeAll(self):
         # First, reset the Engine's internal sizes

@@ -199,3 +199,12 @@ def save_new_playlist(lms, player, new_name):
     player_id = player.player_id
 
     lms.query(player_id, "playlist", "save", new_name)
+
+def move_track_in_play_queue(lms, player, start, end):
+    player_id = player.player_id
+
+    lms.query(player_id, "playlist", "move", start, end)
+
+def move_track_in_saved_playlist(lms, playlist_id, start, end):
+    lms.query("", "playlists", "edit", f"playlist_id:{playlist_id}",
+              "cmd:move", f"index:{start}", f"toindex:{end}")

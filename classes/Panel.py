@@ -6,7 +6,7 @@ import curses
 import unicodedata
 
 import draw
-from util import Point, get_color_pair
+from util import Mode, Point, get_color_pair
 
 """
 A Panel is a container for an arbitrary set of information. Since this will
@@ -198,9 +198,10 @@ class Statusline(Panel):
     def __init__(self, statusline_dimensions, title=""):
         super().__init__(statusline_dimensions, title)
 
-    def render(self, player_info):
+    def render(self, player_info, engine_mode):
         self.clearScreen()
         self.drawPlayerInfo(player_info)
+        self.drawModeIndicator(engine_mode)
         self.win.refresh()
 
     def clearScreen(self):
@@ -286,6 +287,22 @@ class Statusline(Panel):
         p = Point(0, self.width - (len(info) + len(self.playback_string)))
         draw.string(p, info, self.win)
         self.playback_string = info + self.playback_string + " "
+
+    def drawModeIndicator(self, engine_mode):
+        if engine_mode == Mode.NORMAL:
+            return
+        elif engine_mode == Mode.MOVE:
+            mode_string = " * MOVE MODE * "
+        elif engine_mode == Mode.DELETE:
+            mode_string = " * DELETE MODE * "
+
+        y = 0
+        x = (self.width // 2) - (len(mode_string) // 2)
+        p = Point(y, x)
+        attr = curses.A_REVERSE | curses.A_BOLD
+        self.win.attron(attr)
+        draw.string(p, mode_string, self.win)
+        self.win.attroff(attr)
 
 def translate_power(state):
     if state == 0:
@@ -483,6 +500,7 @@ class PlaylistPanel(ListPanel):
         super().__init__(panel_dimensions, title)
         self.l_item = min(len(self.items), self.height - (PLAYLIST_HEADERS_HEIGHT + 3))
         self.constructColumnWidths()
+        self.moveStart = -1
 
     def constructColumnWidths(self):
         # Column names:      Title,  Album, Track,   Artist, Year
@@ -580,28 +598,39 @@ class PlaylistPanel(ListPanel):
         # Fill spaces for each value, based on the width of the column
         # Keep track of the string so far, to compare length
         self.song_string = " "
+        absolute_offset = item_y - (PLAYLIST_HEADERS_HEIGHT + PLAYLIST_TOP_BAR_HEIGHT) + self.f_item
 
         attr = get_color_pair("PlaylistSongTitle")
+        if absolute_offset == self.moveStart:
+            attr = curses.A_BOLD | curses.A_REVERSE
         self.win.attron(attr)
         self.drawColumn('title', title, item_y)
         self.win.attroff(attr)
 
         attr = get_color_pair("PlaylistSongAlbum")
+        if absolute_offset == self.moveStart:
+            attr = curses.A_BOLD | curses.A_REVERSE
         self.win.attron(attr)
         self.drawColumn('album', album, item_y)
         self.win.attroff(attr)
 
         attr = get_color_pair("PlaylistSongTracknum")
+        if absolute_offset == self.moveStart:
+            attr = curses.A_BOLD | curses.A_REVERSE
         self.win.attron(attr)
         self.drawColumn('track', track, item_y)
         self.win.attroff(attr)
 
         attr = get_color_pair("PlaylistSongArtist")
+        if absolute_offset == self.moveStart:
+            attr = curses.A_BOLD | curses.A_REVERSE
         self.win.attron(attr)
         self.drawColumn('artist', artist, item_y)
         self.win.attroff(attr)
 
         attr = get_color_pair("PlaylistSongYear")
+        if absolute_offset == self.moveStart:
+            attr = curses.A_BOLD | curses.A_REVERSE
         self.win.attron(attr)
         p = Point(item_y, self.width - 5)
         draw.string(p, year, self.win)
@@ -665,3 +694,13 @@ class PlaylistPanel(ListPanel):
         if len(self.items) < self.height - (PLAYLIST_HEADERS_HEIGHT + 3):
             self.f_item = 0
         self.l_item = min(len(self.items), self.f_item + (self.height - (PLAYLIST_HEADERS_HEIGHT + 3)))
+
+    def setMoveStart(self):
+        self.moveStart = self.curr_item
+
+    def getMoveIndices(self):
+        move_start = self.moveStart
+        self.moveStart = -1
+        move_end = self.curr_item
+        
+        return (move_start, move_end)

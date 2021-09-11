@@ -6,9 +6,11 @@ import curses
 
 import lmswrapper
 import paneldriver
+from util import Mode
 
 from classes.Box import Editbox, Infobox, Listbox, Prompt
 from classes.Music import LMSPlayer
+from classes.Panel import PlaylistPanel
 
 TAB_NUMBERS = [
                 ord('1'), ord('2'), ord('3'),
@@ -341,6 +343,66 @@ def handle_generic_commands(engine, key):
             # If the user is on the Playlist screen, reload it
             if engine.currentScreenIndex == 0:
                 engine.reloadPlaylist()
+    elif(key == ord('m')):
+        # Only enter move mode if focused on a PlaylistPanel
+        panel = engine.getCurrentScreen().getCurrentPanel()
+        if isinstance(panel, PlaylistPanel):
+            engine.mode = Mode.MOVE
+            # Tell the panel to store the start index
+            panel.setMoveStart()
+    elif(key == curses.KEY_RESIZE):
+        # Begin a cascading call to resize all screens/panels/windows/etc
+        engine.resizeAll()
+    else:
+        pass # Do nothing
+
+def handle_move_mode_commands(engine, key):
+    if(key == ord('q')):
+        # Exit move mode without serializing changes
+        panel = engine.getCurrentScreen().getCurrentPanel()
+        panel.getMoveIndices()
+        engine.mode = Mode.NORMAL
+    elif(key == ord('m')):
+        # Only enter move mode if focused on a PlaylistPanel
+        panel = engine.getCurrentScreen().getCurrentPanel()
+        if isinstance(panel, PlaylistPanel):
+            engine.mode = Mode.NORMAL
+            (start, end) = panel.getMoveIndices()
+            if start != end:
+                # Use different queries based on the current screen
+                if engine.currentScreenIndex == 0:
+                    lmswrapper.move_track_in_play_queue(engine.server, engine.player, start, end)
+                    engine.reloadPlaylist()
+                elif engine.currentScreenIndex == 2:
+                    playlist = engine.screens[2].panels[0].getCurrentItem()
+                    lmswrapper.move_track_in_saved_playlist(engine.server, playlist.playlist_id, start, end)
+                    engine.reloadSavedPlaylists()
+                    # Move focused panel back to the playlist tracks
+                    engine.screens[2].incrementCurrentPanel()
+    elif(key == ord('j')):
+        # Move current panel's highlight down 1
+        panel = engine.getCurrentScreen().getCurrentPanel()
+        paneldriver.move_down(panel, 1)
+    elif(key == ord('J')):
+        # Move current panel's highlight down half the panel height
+        panel = engine.getCurrentScreen().getCurrentPanel()
+        paneldriver.move_down(panel, panel.height // 2)
+    elif(key == ord('G')):
+        # Move current panel's highlight down to the bottom
+        panel = engine.getCurrentScreen().getCurrentPanel()
+        paneldriver.move_down(panel, len(panel.items))
+    elif(key == ord('k')):
+        # Move current panel's highlight up 1
+        panel = engine.getCurrentScreen().getCurrentPanel()
+        paneldriver.move_up(panel, 1)
+    elif(key == ord('K')):
+        # Move current panel's highlight up half the panel height
+        panel = engine.getCurrentScreen().getCurrentPanel()
+        paneldriver.move_up(panel, panel.height // 2)
+    elif(key == ord('g')):
+        # Move current panel's highlight up to the top
+        panel = engine.getCurrentScreen().getCurrentPanel()
+        paneldriver.move_up(panel, len(panel.items))
     elif(key == curses.KEY_RESIZE):
         # Begin a cascading call to resize all screens/panels/windows/etc
         engine.resizeAll()

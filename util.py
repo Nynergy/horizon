@@ -1,5 +1,11 @@
 import curses
 import json
+from enum import Enum
+
+class Mode(Enum):
+    NORMAL = 1
+    MOVE = 2
+    DELETE = 3
 
 class Point:
     def __init__(self, y, x):
