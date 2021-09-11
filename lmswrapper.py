@@ -208,3 +208,6 @@ def move_track_in_play_queue(lms, player, start, end):
 def move_track_in_saved_playlist(lms, playlist_id, start, end):
     lms.query("", "playlists", "edit", f"playlist_id:{playlist_id}",
               "cmd:move", f"index:{start}", f"toindex:{end}")
+
+def delete_saved_playlist(lms, playlist_id):
+    lms.query("", "playlists", "delete", f"playlist_id:{playlist_id}")

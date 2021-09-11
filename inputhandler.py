@@ -284,6 +284,25 @@ def handle_saved_playlist_commands(engine, key):
                 lmswrapper.rename_playlist(engine.server, playlist.playlist_id, new_name, False)
 
                 engine.reloadSavedPlaylists()
+    elif(key == ord('D')):
+        # Prompt the user if they actually want to delete the playlist
+        playlist = engine.screens[2].panels[0].getCurrentItem()
+        prompt = Prompt(f"Really delete the playlist? ({playlist.name})", engine.win)
+        confirmed = prompt.getConfirmation()
+        while confirmed == "RESIZE":
+            engine.resizeAll()
+            prompt = Prompt("Really delete the playlist? ({playlist.name})", engine.win)
+            confirmed = prompt.getConfirmation()
+        if confirmed:
+            # Clear the playlist
+            engine.renderAll()
+
+            # Let the user know we are doing work
+            infobox = Infobox("Deleting Playlist...", engine.win)
+            infobox.render()
+            lmswrapper.delete_saved_playlist(engine.server, playlist.playlist_id)
+
+            engine.reloadSavedPlaylists()
     else:
         pass # Do nothing
 
