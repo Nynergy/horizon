@@ -7,8 +7,8 @@ import curses
 import lmswrapper
 import paneldriver
 
+from classes.Box import Editbox, Infobox, Listbox, Prompt
 from classes.Music import LMSPlayer
-from classes.Panel import Editbox, Infobox, Listbox, Prompt
 
 TAB_NUMBERS = [
                 ord('1'), ord('2'), ord('3'),

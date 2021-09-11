@@ -11,8 +11,9 @@ import paneldriver
 import screenmaker
 from util import Point
 
+from classes.Box import Infobox
 from classes.Music import LMSPlayer
-from classes.Panel import Infobox, Playbar, Statusline
+from classes.Panel import Playbar, Statusline
 from classes.Screen import Screen
 
 class Engine:
