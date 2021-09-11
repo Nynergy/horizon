@@ -397,6 +397,54 @@ class Engine:
                 infobox = Infobox("Loading Media Selection...", self.win)
                 infobox.render()
                 lmswrapper.load_saved_playlist(self.server, self.player, 'add', selected_item)
+            elif(key == ord('n')):
+                # Rename highlighted saved playlist
+                panel = self.screens[2].getCurrentPanel()
+                playlist = paneldriver.get_selected_item(panel)
+
+                editbox = Editbox(f"Enter a New Name for Playlist '{playlist.name}'", "Name:", self.win)
+                editbox.injectString(playlist.name)
+                (new_name, ret_code) = editbox.getInput()
+                while ret_code == 0:
+                    # Handle resizing
+                    self.resizeAll()
+                    editbox = Editbox(f"Enter a New Name for Playlist '{playlist.name}'", "Name:", self.win)
+                    editbox.injectString(new_name)
+                    (new_name, ret_code) = editbox.getInput()
+                
+                if ret_code != -1:
+                    # We have to dry-run first to see if there is a name collision
+                    conflict = lmswrapper.rename_playlist(self.server, playlist.playlist_id, new_name, True)
+                    if conflict:
+                        self.renderAll()
+
+                        # Prompt the user if they actually want to overwrite the playlist
+                        prompt = Prompt("A playlist with this name already exists. Overwrite it?", self.win)
+                        confirmed = prompt.getConfirmation()
+                        while confirmed == "RESIZE":
+                            self.resizeAll()
+                            prompt = Prompt("A playlist with this name already exists. Overwrite it?", self.win)
+                            confirmed = prompt.getConfirmation()
+                        if confirmed:
+                            # Clear the playlist
+                            self.renderAll()
+
+                            # Let the user know we are doing work
+                            infobox = Infobox("Renaming Saved Playlist...", self.win)
+                            infobox.render()
+                            lmswrapper.rename_playlist(self.server, playlist.playlist_id, new_name, False)
+
+                            self.reloadSavedPlaylists()
+                    else: # No conflict, go right ahead
+                        # Clear the playlist
+                        self.renderAll()
+
+                        # Let the user know we are doing work
+                        infobox = Infobox("Renaming Saved Playlist...", self.win)
+                        infobox.render()
+                        lmswrapper.rename_playlist(self.server, playlist.playlist_id, new_name, False)
+
+                        self.reloadSavedPlaylists()
             else:
                 pass # Do nothing
 

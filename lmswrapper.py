@@ -184,3 +184,13 @@ def rename_player(lms, player, new_name):
     lms.query(player_id, "name", new_name)
     # We also need to update the player name client-side
     player.name = new_name
+
+def rename_playlist(lms, playlist_id, new_name, is_dry_run):
+    if is_dry_run:
+        ret = lms.query("", "playlists", "rename",
+                        f"playlist_id:{playlist_id}",
+                        f"newname:{new_name}",
+                        "dry_run:1")
+        return True if 'overwritten_playlist_id' in ret else False
+
+    lms.query("", "playlists", "rename", f"playlist_id:{playlist_id}", f"newname:{new_name}")
