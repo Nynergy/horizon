@@ -82,7 +82,7 @@ class Form:
                 self.handleInput(ch)
 
     def handleInput(self, ch):
-        if ch == 127: # Backspace key
+        if ch == curses.KEY_BACKSPACE or ch == 127: # Backspace key
             self.removeCharFromBuffer()
         else:
             ch = convert_int_to_char(ch)
