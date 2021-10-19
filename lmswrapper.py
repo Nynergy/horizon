@@ -26,7 +26,7 @@ def get_current_playlist(lms, player):
         s = collapse_songinfo(songinfo)
 
         song = Song(s['id'], s['title'], s['artist'], s['artist_id'],
-                    s['album'], s['album_id'], s['year'], s['tracknum'])
+                    s['album'], s['album_id'], s['year'], s.get('tracknum', 0))
         playlist.append(song)
 
     return playlist
@@ -85,7 +85,7 @@ def get_media_library(lms):
             albums[album.album_id] = album
         # Put song obj into album tracklist
         song_obj = Song(song['id'], song['title'], artist, artist_id,
-                        song['album'], song['album_id'], song['year'], song['tracknum'])
+                        song['album'], song['album_id'], song['year'], song.get('tracknum', 0))
         album = albums[song['album_id']]
         album.addSong(song_obj)
 
@@ -161,7 +161,7 @@ def get_saved_playlists(lms):
                           "tags:aelsty")['playlisttracks_loop']
         for song in songs:
             s = Song(song['id'], song['title'], song['artist'], song['artist_id'],
-                     song['album'], song['album_id'], song['year'], song['tracknum'])
+                     song['album'], song['album_id'], song['year'], song.get('tracknum', 0))
             playlist.addSong(s)
 
         playlists.append(playlist)
